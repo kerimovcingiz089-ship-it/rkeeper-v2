@@ -285,28 +285,34 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   function updateOnlineOrderStatus(id: string, status: import("../types").OnlineOrderStatus) {
     setDataRaw((prev) => {
+      const order = prev.onlineOrders.find(o => o.id === id);
+      const wasNew = order?.status === "new";
+
       const next = {
         ...prev,
         onlineOrders: prev.onlineOrders.map(o => o.id === id ? { ...o, status } : o),
       };
 
       // When order is completed, decrease stock
-      if (status === "completed") {
-        const order = prev.onlineOrders.find(o => o.id === id);
-        if (order) {
-          next.items = prev.items.map(item => {
-            const line = order.items.find(li => li.name === item.name);
-            if (line) {
-              const newStock = Math.max(0, item.stock - line.qty);
-              apiUpdateStock(item.id, newStock);
-              return { ...item, stock: newStock };
-            }
-            return item;
-          });
-        }
+      if (status === "completed" && order) {
+        next.items = prev.items.map(item => {
+          const line = order.items.find(li => li.name === item.name);
+          if (line) {
+            const newStock = Math.max(0, item.stock - line.qty);
+            apiUpdateStock(item.id, newStock);
+            return { ...item, stock: newStock };
+          }
+          return item;
+        });
       }
 
       saveData(next);
+
+      // Update badge immediately
+      if (wasNew) {
+        setNewOnlineOrdersCount(n => Math.max(0, n - 1));
+      }
+
       return next;
     });
     apiUpdateOnlineOrderStatus(id, status);
