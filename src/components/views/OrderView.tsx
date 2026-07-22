@@ -175,6 +175,9 @@ export default function OrderView() {
                   ${outOfStock
                     ? "border-dashed border-gray-200 opacity-50 cursor-not-allowed"
                     : "border-gray-200 hover:border-[#6C5CE7] hover:-translate-y-1 hover:shadow-md cursor-pointer"}`}>
+                {item.imageUrl ? (
+                  <img src={item.imageUrl} alt={item.name} className="w-full h-20 object-cover rounded-xl mb-2" />
+                ) : null}
                 <div className="text-sm font-bold leading-snug mb-2 min-h-[36px] flex flex-col gap-1">
                   {item.name}
                   <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full w-fit
@@ -210,6 +213,9 @@ export default function OrderView() {
               const lineTotal = item.price * li.qty;
               return (
                 <div key={li.itemId} className="flex items-center gap-2 py-3 border-b border-[#F1EEFA] last:border-0">
+                  {item.imageUrl ? (
+                    <img src={item.imageUrl} alt={item.name} className="w-9 h-9 rounded-lg object-cover shrink-0" />
+                  ) : null}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold truncate">{item.name}</div>
                     <div className="text-xs text-gray-400">{fmtMoney(item.price, data.settings.currency)}</div>
