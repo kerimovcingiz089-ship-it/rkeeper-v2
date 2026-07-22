@@ -153,7 +153,7 @@ export default function OrderView() {
           {data.categories.map(c => (
             <button key={c.id}
               onClick={() => setActiveCatId(c.id)}
-              className={`px-4 py-2 rounded-full text-sm font-bold border transition-all
+              className={`px-4 py-2 rounded-full text-sm font-bold border transition-all cursor-pointer
                 ${catId === c.id
                   ? "text-white border-transparent"
                   : "bg-white border-gray-200 text-gray-500 hover:border-[#6C5CE7] hover:text-[#6C5CE7]"}`}
@@ -222,10 +222,10 @@ export default function OrderView() {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button onClick={() => changeQty(item.id, -1)}
-                      className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA]">−</button>
+                      className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA] cursor-pointer">−</button>
                     <span className="text-sm font-extrabold w-4 text-center">{li.qty}</span>
                     <button onClick={() => changeQty(item.id, 1)}
-                      className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA]">+</button>
+                      className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA] cursor-pointer">+</button>
                   </div>
                   <div className="text-sm font-extrabold tabular-nums min-w-[60px] text-right">
                     {fmtMoney(lineTotal, data.settings.currency)}
@@ -243,21 +243,21 @@ export default function OrderView() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => switchView("tables")}
-              className="flex-1 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold hover:bg-gray-50 transition">
+              className="flex-1 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold hover:bg-gray-50 transition cursor-pointer">
               ← Masalar
             </button>
             <button onClick={openReceiptPreview} disabled={!canAct}
-              className="flex-1 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex-1 py-2 rounded-xl border border-gray-200 bg-white text-sm font-bold hover:bg-gray-50 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               🖨 Çek
             </button>
           </div>
           <div className="flex gap-2">
             <button onClick={cancelOrder} disabled={!canAct}
-              className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               Ləğv et
             </button>
             <button onClick={() => setPayModal(true)} disabled={!canAct}
-              className="flex-1 py-2 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              className="flex-1 py-2 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               Hesabı bağla
             </button>
           </div>
@@ -272,7 +272,7 @@ export default function OrderView() {
           <div className="flex gap-3 mb-4">
             {(["cash","card"] as const).map(p => (
               <button key={p} onClick={() => setSelectedPay(p)}
-                className={`flex-1 py-4 rounded-xl border-2 text-sm font-bold transition-all
+                className={`flex-1 py-4 rounded-xl border-2 text-sm font-bold transition-all cursor-pointer
                   ${selectedPay === p ? "border-[#6C5CE7] bg-[#ECE9FE] text-[#5847D1]" : "border-gray-200 text-gray-400"}`}>
                 {p === "cash" ? "💵 Nağd" : "💳 Kart"}
               </button>
@@ -284,9 +284,9 @@ export default function OrderView() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => setPayModal(false)} disabled={loading}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40">Ləğv et</button>
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40 cursor-pointer">Ləğv et</button>
             <button onClick={closeBill} disabled={loading}
-              className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-70 flex items-center justify-center gap-2">
+              className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer">
               {loading ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Gözləyin...</>) : "Təsdiqlə"}
             </button>
           </div>
@@ -301,9 +301,9 @@ export default function OrderView() {
           </div>
           <div className="flex gap-2 mt-4">
             <button onClick={() => setReceiptModal(false)}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50">Bağla</button>
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 cursor-pointer">Bağla</button>
             <button onClick={printReceipt}
-              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold"
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold cursor-pointer"
               style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>🖨️ Çap et</button>
           </div>
         </Modal>

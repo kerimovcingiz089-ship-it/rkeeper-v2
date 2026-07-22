@@ -120,7 +120,7 @@ export default function MenuView() {
       {/* Toolbar */}
       <div className="flex justify-end mb-5">
         <button onClick={openAddCat}
-          className="px-4 py-2 rounded-xl text-white text-sm font-bold"
+          className="px-4 py-2 rounded-xl text-white text-sm font-bold cursor-pointer"
           style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
           + Yeni kateqoriya
         </button>
@@ -136,11 +136,11 @@ export default function MenuView() {
                 <h3 className="font-extrabold text-sm">{cat.name}</h3>
                 <div className="flex gap-2">
                   <button onClick={() => openAddItem(cat.id)}
-                    className="px-3 py-1.5 border border-gray-200 bg-white text-xs font-bold rounded-lg hover:bg-gray-50 transition">+ Yemək</button>
+                    className="px-3 py-1.5 border border-gray-200 bg-white text-xs font-bold rounded-lg hover:bg-gray-50 transition cursor-pointer">+ Yemək</button>
                   <button onClick={() => openEditCat(cat.id)}
-                    className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition">✎</button>
+                    className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition cursor-pointer">✎</button>
                   <button onClick={() => delCat(cat.id)}
-                    className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition">✕</button>
+                    className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition cursor-pointer">✕</button>
                 </div>
               </div>
               {items.length === 0 ? (
@@ -163,9 +163,9 @@ export default function MenuView() {
                     </div>
                     <div className="flex gap-1.5">
                       <button onClick={() => openEditItem(item.id)}
-                        className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition">✎</button>
+                        className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition cursor-pointer">✎</button>
                       <button onClick={() => delItem(item.id)}
-                        className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition">✕</button>
+                        className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition cursor-pointer">✕</button>
                     </div>
                   </div>
                 ))
@@ -184,8 +184,8 @@ export default function MenuView() {
             placeholder="Məs. Şorbalar"
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6C5CE7]" />
           <div className="flex gap-2 mt-5">
-            <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50">Ləğv et</button>
-            <button onClick={saveCat} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold" style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
+            <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 cursor-pointer">Ləğv et</button>
+            <button onClick={saveCat} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold cursor-pointer" style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
               {modal.type === "addCat" ? "Əlavə et" : "Yadda saxla"}
             </button>
           </div>
@@ -208,7 +208,7 @@ export default function MenuView() {
               </div>
             ) : (
               <button onClick={() => fileRef.current?.click()}
-                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-[#6C5CE7] hover:text-[#6C5CE7] transition">
+                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-[#6C5CE7] hover:text-[#6C5CE7] transition cursor-pointer">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 <span className="text-[9px] font-bold mt-1">Şəkil</span>
               </button>
@@ -234,9 +234,9 @@ export default function MenuView() {
             </>
           )}
           <div className="flex gap-2 mt-5">
-            <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50">Ləğv et</button>
+            <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 cursor-pointer">Ləğv et</button>
             <button onClick={saveItem} disabled={uploading}
-              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
               {uploading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {modal.type === "addItem" ? "Əlavə et" : "Yadda saxla"}

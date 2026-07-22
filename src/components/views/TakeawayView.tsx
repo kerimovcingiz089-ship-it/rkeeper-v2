@@ -129,7 +129,7 @@ export default function TakeawayView() {
         <div className="flex gap-2 flex-wrap">
           {data.categories.map(c => (
             <button key={c.id} onClick={() => setTakeawayActiveCat(c.id)}
-              className={`px-4 py-2 rounded-full text-sm font-bold border transition-all
+              className={`px-4 py-2 rounded-full text-sm font-bold border transition-all cursor-pointer
                 ${catId === c.id ? "text-white border-transparent" : "bg-white border-gray-200 text-gray-500 hover:border-[#6C5CE7] hover:text-[#6C5CE7]"}`}
               style={catId === c.id ? { background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" } : {}}>
               {c.name}
@@ -189,17 +189,17 @@ export default function TakeawayView() {
                     <div className="flex gap-1">
                       {o.status === "waiting" && (
                         <button onClick={() => setData(prev => ({ ...prev, takeawayOrders: prev.takeawayOrders.map(x => x.id === o.id ? { ...x, status: "ready" } : x) }))}
-                          className="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-lg hover:opacity-90">Hazır</button>
+                          className="px-2 py-1 bg-green-500 text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer">Hazır</button>
                       )}
                       {o.status === "ready" && (
                         <button onClick={() => openTakeawayReceipt(o.id)}
-                          className="px-2 py-1 border border-gray-200 text-xs font-bold rounded-lg hover:bg-gray-50">🖨️ Çek</button>
+                          className="px-2 py-1 border border-gray-200 text-xs font-bold rounded-lg hover:bg-gray-50 cursor-pointer">🖨️ Çek</button>
                       )}
                       <button onClick={() => setData(prev => ({ ...prev, takeawayOrders: prev.takeawayOrders.map(x => x.id === o.id ? { ...x, status: "completed" } : x) }))}
-                        className="px-2 py-1 text-white text-xs font-bold rounded-lg hover:opacity-90"
+                        className="px-2 py-1 text-white text-xs font-bold rounded-lg hover:opacity-90 cursor-pointer"
                         style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>Təhvil</button>
                       <button onClick={() => { if (confirm("Ləğv edilsin?")) setData(prev => ({ ...prev, takeawayOrders: prev.takeawayOrders.filter(x => x.id !== o.id) })); toast("Ləğv edildi"); }}
-                        className="px-2 py-1 bg-red-100 text-red-500 text-xs font-bold rounded-lg hover:bg-red-200">✕</button>
+                        className="px-2 py-1 bg-red-100 text-red-500 text-xs font-bold rounded-lg hover:bg-red-200 cursor-pointer">✕</button>
                     </div>
                   </div>
                 </div>
@@ -234,9 +234,9 @@ export default function TakeawayView() {
                     <div className="text-xs text-gray-400">{fmtMoney(item.price, data.settings.currency)}</div>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => changeQty(item.id, -1)} className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA]">−</button>
+                    <button onClick={() => changeQty(item.id, -1)} className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA] cursor-pointer">−</button>
                     <span className="text-sm font-extrabold w-4 text-center">{li.qty}</span>
-                    <button onClick={() => changeQty(item.id, 1)} className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA]">+</button>
+                    <button onClick={() => changeQty(item.id, 1)} className="w-6 h-6 rounded-lg border border-gray-200 bg-white text-base leading-none hover:bg-[#F1EEFA] cursor-pointer">+</button>
                   </div>
                   <div className="text-sm font-extrabold tabular-nums min-w-[60px] text-right">{fmtMoney(item.price * li.qty, data.settings.currency)}</div>
                 </div>
@@ -251,9 +251,9 @@ export default function TakeawayView() {
           </div>
           <div className="flex gap-2">
             <button onClick={() => { setTakeawayCart([]); setTakeawayCustomerName(""); }} disabled={!canAct}
-              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:opacity-90 disabled:opacity-40">Təmizlə</button>
+              className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-bold hover:opacity-90 disabled:opacity-40 cursor-pointer">Təmizlə</button>
             <button onClick={() => setPayModal(true)} disabled={!canAct}
-              className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-40">Ödəniş & Yarat</button>
+              className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-40 cursor-pointer">Ödəniş & Yarat</button>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default function TakeawayView() {
           <div className="flex gap-3 mb-4">
             {(["cash","card"] as const).map(p => (
               <button key={p} onClick={() => setSelectedPay(p)}
-                className={`flex-1 py-4 rounded-xl border-2 text-sm font-bold transition-all
+                className={`flex-1 py-4 rounded-xl border-2 text-sm font-bold transition-all cursor-pointer
                   ${selectedPay === p ? "border-[#6C5CE7] bg-[#ECE9FE] text-[#5847D1]" : "border-gray-200 text-gray-400"}`}>
                 {p === "cash" ? "💵 Nağd" : "💳 Kart"}
               </button>
@@ -277,8 +277,8 @@ export default function TakeawayView() {
             <span className="text-2xl font-extrabold">{fmtMoney(total, data.settings.currency)}</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setPayModal(false)} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40">Ləğv et</button>
-            <button onClick={completeOrder} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-70 flex items-center justify-center gap-2">
+            <button onClick={() => setPayModal(false)} disabled={loading} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40 cursor-pointer">Ləğv et</button>
+            <button onClick={completeOrder} disabled={loading} className="flex-1 py-2.5 rounded-xl bg-[#1E9E77] text-white text-sm font-bold hover:opacity-90 disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer">
               {loading ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Gözləyin...</>) : "Təsdiqlə"}
             </button>
           </div>
@@ -292,8 +292,8 @@ export default function TakeawayView() {
             <Receipt data={receiptData} />
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={() => setReceiptModal(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50">Bağla</button>
-            <button onClick={printReceipt} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold" style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>🖨️ Çap et</button>
+            <button onClick={() => setReceiptModal(false)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 cursor-pointer">Bağla</button>
+            <button onClick={printReceipt} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold cursor-pointer" style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>🖨️ Çap et</button>
           </div>
         </Modal>
       )}

@@ -98,9 +98,9 @@ export default function ReportsView() {
       {/* Date filter */}
       <div className="flex gap-3 items-center mb-5 flex-wrap">
         <input type="date" value={reportDate} onChange={e => setReportDate(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#6C5CE7]" />
+          className="px-3 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-[#6C5CE7] cursor-pointer" />
         <button onClick={() => setReportDate(todayStr())}
-          className="px-4 py-2 border border-gray-200 bg-white rounded-full text-sm font-bold hover:bg-gray-50 transition">
+          className="px-4 py-2 border border-gray-200 bg-white rounded-full text-sm font-bold hover:bg-gray-50 transition cursor-pointer">
           Bu gün
         </button>
       </div>

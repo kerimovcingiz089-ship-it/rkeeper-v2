@@ -73,13 +73,13 @@ export default function OnlineOrdersView() {
         </div>
         {hasNew ? (
           <button onClick={clearOnlineBadge}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-white transition hover:-translate-y-0.5"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white transition hover:-translate-y-0.5 cursor-pointer"
             style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
             Yeni sifarişləri gördüm
           </button>
         ) : (
           <button onClick={() => refreshOnlineOrders()}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition">
+            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition cursor-pointer">
             ↻ Yenilə
           </button>
         )}
@@ -177,26 +177,26 @@ export default function OnlineOrdersView() {
                               <>
                                 <button onClick={() => handleAccept(order)}
                                   disabled={stockCheck ? !stockCheck.ok : false}
-                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
                                   style={{ background: "#E0A23B" }}>
                                   Qəbul et
                                 </button>
                                 <button onClick={() => handleStatusChange(order.id, "cancelled")}
-                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-400 border border-gray-200 hover:bg-gray-50 transition">
+                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-400 border border-gray-200 hover:bg-gray-50 transition cursor-pointer">
                                   Ləğv et
                                 </button>
                               </>
                             )}
                             {status === "preparing" && (
                               <button onClick={() => handleStatusChange(order.id, "ready")}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5 cursor-pointer"
                                 style={{ background: "#12C7B4" }}>
                                 Hazırdır
                               </button>
                             )}
                             {status === "ready" && (
                               <button onClick={() => handleStatusChange(order.id, "completed")}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5 cursor-pointer"
                                 style={{ background: "#6C5CE7" }}>
                                 Təhvil verildi
                               </button>

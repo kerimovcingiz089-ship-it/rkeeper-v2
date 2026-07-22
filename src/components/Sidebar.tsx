@@ -39,7 +39,7 @@ export default function Sidebar() {
           {NAV.filter(n => allowed.includes(n.id)).map(n => (
             <button key={n.id}
               onClick={() => switchView(n.id as any)}
-              className={`w-14 h-14 flex flex-col items-center justify-center gap-1 rounded-xl text-[9px] font-bold tracking-wide transition-all relative
+              className={`w-14 h-14 flex flex-col items-center justify-center gap-1 rounded-xl text-[9px] font-bold tracking-wide transition-all relative cursor-pointer
                 ${currentView === n.id
                   ? "text-white"
                   : "text-[#9088A0] hover:bg-[#1B1D27] hover:text-white"}`}
@@ -62,7 +62,7 @@ export default function Sidebar() {
         <div className="flex flex-col items-center gap-1 pt-3 flex-shrink-0">
           <button onClick={logout}
             title={`${currentUser.name} — Çıxış`}
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-extrabold transition hover:scale-110"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-extrabold transition hover:scale-110 cursor-pointer"
             style={{ background: isAdmin ? "linear-gradient(135deg,#6C5CE7,#9C8CFF)" : "linear-gradient(135deg,#12C7B4,#4FE3CD)" }}>
             {initialsOf(currentUser.name)}
           </button>
@@ -77,7 +77,7 @@ export default function Sidebar() {
         {NAV.filter(n => allowed.includes(n.id)).slice(0, 5).map(n => (
           <button key={n.id}
             onClick={() => switchView(n.id as any)}
-            className={`flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide px-2 py-1 rounded-xl transition-all relative
+            className={`flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide px-2 py-1 rounded-xl transition-all relative cursor-pointer
               ${currentView === n.id ? "text-white" : "text-[#9088A0]"}`}
             style={currentView === n.id
               ? { background: "linear-gradient(135deg,rgba(108,92,231,.5),rgba(18,199,180,.3))" }
@@ -93,7 +93,7 @@ export default function Sidebar() {
           </button>
         ))}
         <button onClick={logout}
-          className="flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide text-[#9088A0] px-2 py-1">
+          className="flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide text-[#9088A0] px-2 py-1 cursor-pointer">
           <span className="text-base">🚪</span>
           Çıxış
         </button>

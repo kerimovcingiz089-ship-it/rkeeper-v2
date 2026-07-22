@@ -72,7 +72,7 @@ export default function UsersView() {
   return (
     <div>
       <div className="flex justify-end mb-5">
-        <button onClick={openAdd} className="px-4 py-2 rounded-xl text-white text-sm font-bold"
+        <button onClick={openAdd} className="px-4 py-2 rounded-xl text-white text-sm font-bold cursor-pointer"
           style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
           + Yeni istifadəçi
         </button>
@@ -106,9 +106,9 @@ export default function UsersView() {
                   {isAdmin2 ? "Admin" : "Kassir"}
                 </span>
                 <button onClick={() => openEdit(u.id)}
-                  className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition text-xs">✎</button>
+                  className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition text-xs cursor-pointer">✎</button>
                 <button onClick={() => delUser(u.id)} disabled={isSelf}
-                  className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition text-xs disabled:opacity-30 disabled:cursor-not-allowed">✕</button>
+                  className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition text-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer">✕</button>
               </div>
             </div>
           );
@@ -140,9 +140,9 @@ export default function UsersView() {
           </select>
           <div className="flex gap-2 mt-5">
             <button onClick={() => setModal(null)} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40">Ləğv et</button>
+              className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50 disabled:opacity-40 cursor-pointer">Ləğv et</button>
             <button onClick={save} disabled={saving}
-              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70"
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
               style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
               {saving ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Gözləyin...</>) : (modal.type === "add" ? "Əlavə et" : "Yadda saxla")}
             </button>

@@ -36,14 +36,14 @@ export default function SettingsView() {
 
         <label className="block text-xs font-bold text-gray-400 mb-1.5">Valyuta işarəsi</label>
         <select value={currency} onChange={e => setCurrency(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6C5CE7] mb-5">
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6C5CE7] mb-5 cursor-pointer">
           <option value="₼">₼ (Manat)</option>
           <option value="$">$ (Dollar)</option>
           <option value="€">€ (Avro)</option>
           <option value="₽">₽ (Rubl)</option>
         </select>
 
-        <button onClick={save} className="w-full py-2.5 rounded-xl text-white font-bold text-sm"
+        <button onClick={save} className="w-full py-2.5 rounded-xl text-white font-bold text-sm cursor-pointer"
           style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
           Yadda saxla
         </button>
@@ -58,7 +58,7 @@ export default function SettingsView() {
             </p>
           </div>
           <button onClick={resetData} disabled={resetting}
-            className="w-full py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:opacity-90 transition disabled:opacity-70 flex items-center justify-center gap-2">
+            className="w-full py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm hover:opacity-90 transition disabled:opacity-70 flex items-center justify-center gap-2 cursor-pointer">
             {resetting ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Sıfırlanır...</>) : "Bütün məlumatları sıfırla"}
           </button>
         </div>

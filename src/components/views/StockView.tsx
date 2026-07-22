@@ -76,23 +76,23 @@ export default function StockView() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1 w-fit">
                       <button onClick={() => handleAdjust(item.id, -1)} disabled={!isAdmin}
-                        className="w-6 h-6 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40">−</button>
+                        className="w-6 h-6 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40 cursor-pointer">−</button>
                       <input type="number" value={item.stock} min={0}
                         disabled={!isAdmin}
                         onChange={e => handleInputChange(item.id, e.target.value)}
                         className="w-14 text-center border-none bg-transparent font-extrabold text-sm outline-none disabled:opacity-60"
                         style={{ MozAppearance: "textfield" } as any} />
                       <button onClick={() => handleAdjust(item.id, 1)} disabled={!isAdmin}
-                        className="w-6 h-6 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40">+</button>
+                        className="w-6 h-6 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40 cursor-pointer">+</button>
                     </div>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <input id={addValId} type="number" defaultValue={5} min={1}
                         disabled={!isAdmin}
-                        className="w-16 text-center border border-gray-200 rounded-xl px-2 py-1.5 text-sm font-extrabold focus:outline-none focus:border-[#6C5CE7] disabled:opacity-60" />
+                        className="w-16 text-center border border-gray-200 rounded-xl px-2 py-1.5 text-sm font-extrabold focus:outline-none focus:border-[#6C5CE7] disabled:opacity-60 cursor-pointer" />
                       <button onClick={() => handleQuickAdd(item.id, addValId)} disabled={!isAdmin}
-                        className="px-3 py-1.5 text-white text-xs font-bold rounded-xl transition hover:opacity-90 disabled:opacity-40"
+                        className="px-3 py-1.5 text-white text-xs font-bold rounded-xl transition hover:opacity-90 disabled:opacity-40 cursor-pointer"
                         style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
                         + Əlavə et
                       </button>
@@ -125,16 +125,16 @@ export default function StockView() {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1">
                   <button onClick={() => handleAdjust(item.id, -1)} disabled={!isAdmin}
-                    className="w-7 h-7 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40">−</button>
+                    className="w-7 h-7 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40 cursor-pointer">−</button>
                   <span className="text-sm font-extrabold w-8 text-center">{item.stock}</span>
                   <button onClick={() => handleAdjust(item.id, 1)} disabled={!isAdmin}
-                    className="w-7 h-7 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40">+</button>
+                    className="w-7 h-7 bg-white rounded-lg text-base leading-none shadow-sm hover:bg-gray-100 disabled:opacity-40 cursor-pointer">+</button>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <input id={addValId} type="number" defaultValue={5} min={1} disabled={!isAdmin}
                     className="w-14 text-center border border-gray-200 rounded-xl px-2 py-1.5 text-sm font-bold focus:outline-none disabled:opacity-60" />
                   <button onClick={() => handleQuickAdd(item.id, addValId)} disabled={!isAdmin}
-                    className="px-3 py-1.5 text-white text-xs font-bold rounded-xl disabled:opacity-40"
+                    className="px-3 py-1.5 text-white text-xs font-bold rounded-xl disabled:opacity-40 cursor-pointer"
                     style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>+ Əlavə et</button>
                 </div>
               </div>
