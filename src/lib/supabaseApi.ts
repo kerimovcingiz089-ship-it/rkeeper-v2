@@ -122,6 +122,28 @@ export async function saveOrder(totalPrice: number, items: any[], meta: { tableN
 
 /* ─── Reset ──────────────────────────────────────────────── */
 
+export async function fetchOnlineOrders(): Promise<import("../types").OnlineOrder[] | null> {
+  try {
+    const { data: rows, error } = await supabase.from("online_orders").select("*").order("created_at", { ascending: false });
+    if (error) { console.warn("Supabase online_orders fetch:", error); return null; }
+    if (!rows) return null;
+    return rows.map((o: any) => ({
+      id: String(o.id),
+      orderNo: Number(o.id),
+      customerName: o.customer_name || "",
+      customerPhone: o.customer_phone || "",
+      items: Array.isArray(o.items) ? o.items : [],
+      total: Number(o.total || 0),
+      status: (o.status || "new") as import("../types").OnlineOrderStatus,
+      note: o.note || "",
+      createdAt: o.created_at ? new Date(o.created_at).getTime() : Date.now(),
+    }));
+  } catch (err) {
+    console.error("fetchOnlineOrders:", err);
+    return null;
+  }
+}
+
 export async function resetAllData(): Promise<void> {
   try {
     await supabase.from("products").delete().neq("id", -1);

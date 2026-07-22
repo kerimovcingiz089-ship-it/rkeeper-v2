@@ -1,0 +1,14 @@
+CREATE TABLE IF NOT EXISTS online_orders (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT NOT NULL DEFAULT '',
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total NUMERIC NOT NULL DEFAULT 0,
+  note TEXT DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE online_orders ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all" ON online_orders FOR ALL USING (true) WITH CHECK (true);

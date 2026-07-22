@@ -13,7 +13,7 @@ const STATUS_CONFIG: Record<OnlineOrderStatus, { label: string; color: string; b
 const STATUS_ORDER: OnlineOrderStatus[] = ["new", "preparing", "ready", "completed", "cancelled"];
 
 export default function OnlineOrdersView() {
-  const { data, clearOnlineBadge, updateOnlineOrderStatus, toast } = useApp();
+  const { data, clearOnlineBadge, updateOnlineOrderStatus, refreshOnlineOrders, toast } = useApp();
 
   const orders = data.onlineOrders;
   const hasNew = orders.some(o => o.status === "new");
@@ -39,11 +39,16 @@ export default function OnlineOrdersView() {
           </h2>
           <p className="text-sm text-gray-400 mt-0.5">Saytdan gələn sifarişlər burada görünəcək</p>
         </div>
-        {hasNew && (
+        {hasNew ? (
           <button onClick={clearOnlineBadge}
             className="px-4 py-2 rounded-xl text-xs font-bold text-white transition hover:-translate-y-0.5"
             style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
             Yeni sifarişləri gördüm
+          </button>
+        ) : (
+          <button onClick={() => refreshOnlineOrders()}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition">
+            ↻ Yenilə
           </button>
         )}
       </div>

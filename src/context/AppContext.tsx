@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders } from "../lib/supabaseApi";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "users" | "settings";
@@ -54,6 +54,7 @@ interface AppCtx {
   refreshOrders: () => Promise<void>;
   refreshUsers: () => Promise<void>;
   refreshCategories: () => Promise<void>;
+  refreshOnlineOrders: () => Promise<void>;
 
   /* stock helper */
   updateStockFor: (itemId: string, newStock: number) => Promise<void>;
@@ -145,6 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const target = allowed.includes(v) ? v : "tables";
     setCurrentView(target);
     if (target === "reports") refreshOrders();
+    if (target === "online") refreshOnlineOrders();
     if (["stock", "menu", "order", "takeaway"].includes(target)) { refreshCategories(); refreshProducts(); }
   }
 
@@ -197,6 +199,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const refreshOnlineOrders = useCallback(async () => {
+    const onlineOrders = await fetchOnlineOrders();
+    if (onlineOrders) {
+      setDataRaw((prev) => {
+        const next = { ...prev, onlineOrders };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
   /* ── user CRUD helpers ── */
   const addUserAndRefresh = useCallback(async (name: string, username: string, password: string, role: string) => {
     return await addUser(name, username, password, role);
@@ -234,6 +247,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await refreshProducts();
       await refreshOrders();
       await refreshUsers();
+      await refreshOnlineOrders();
     })();
   }, []);
 
@@ -294,7 +308,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         reportDate, setReportDate,
         toast, toastMsg,
         newOnlineOrdersCount, clearOnlineBadge, updateOnlineOrderStatus,
-        refreshProducts, refreshOrders, refreshUsers, refreshCategories,
+        refreshProducts, refreshOrders, refreshUsers, refreshCategories, refreshOnlineOrders,
         updateStockFor, saveOrderAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,
         resetAllDataAndRefresh,
