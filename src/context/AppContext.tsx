@@ -11,7 +11,7 @@ import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
 import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories } from "../lib/supabaseApi";
 
 /* ─── Types ─────────────────────────────────────────────── */
-type View = "tables" | "order" | "takeaway" | "stock" | "menu" | "reports" | "users" | "settings";
+type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "users" | "settings";
 
 interface AppCtx {
   data: AppData;
@@ -45,6 +45,10 @@ interface AppCtx {
 
   toast: (msg: string) => void;
   toastMsg: string;
+
+  newOnlineOrdersCount: number;
+  clearOnlineBadge: () => void;
+  updateOnlineOrderStatus: (id: string, status: import("../types").OnlineOrderStatus) => void;
 
   refreshProducts: () => Promise<void>;
   refreshOrders: () => Promise<void>;
@@ -82,6 +86,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
   const [toastMsg, setToastMsg] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [newOnlineOrdersCount, setNewOnlineOrdersCount] = useState(0);
+  const prevOnlineCountRef = useRef(0);
 
   function persist(d: AppData) {
     saveData(d);
@@ -130,8 +136,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   /* ── view switch ── */
   const ROLE_NAV: Record<string, View[]> = {
-    admin: ["tables", "order", "takeaway", "stock", "menu", "reports", "users", "settings"],
-    kassa: ["tables", "order", "takeaway", "stock", "reports"],
+    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "users", "settings"],
+    kassa: ["tables", "order", "takeaway", "online", "stock", "reports"],
   };
 
   function switchView(v: View) {
@@ -231,6 +237,29 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  /* ── track new online orders ── */
+  useEffect(() => {
+    const newCount = data.onlineOrders.filter(o => o.status === "new").length;
+    const prev = prevOnlineCountRef.current;
+    if (newCount > prev) {
+      setNewOnlineOrdersCount(newCount - prev);
+    }
+    prevOnlineCountRef.current = newCount;
+  }, [data.onlineOrders]);
+
+  function clearOnlineBadge() { setNewOnlineOrdersCount(0); }
+
+  function updateOnlineOrderStatus(id: string, status: import("../types").OnlineOrderStatus) {
+    setDataRaw((prev) => {
+      const next = {
+        ...prev,
+        onlineOrders: prev.onlineOrders.map(o => o.id === id ? { ...o, status } : o),
+      };
+      saveData(next);
+      return next;
+    });
+  }
+
   /* ── stock helper ── */
   const updateStockFor = useCallback(async (itemId: string, newStock: number) => {
     const val = Math.max(0, newStock);
@@ -264,6 +293,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         takeawayCustomerName, setTakeawayCustomerName,
         reportDate, setReportDate,
         toast, toastMsg,
+        newOnlineOrdersCount, clearOnlineBadge, updateOnlineOrderStatus,
         refreshProducts, refreshOrders, refreshUsers, refreshCategories,
         updateStockFor, saveOrderAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,

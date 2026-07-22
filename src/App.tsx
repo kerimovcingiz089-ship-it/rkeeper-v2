@@ -4,14 +4,15 @@ import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import Toast from "./components/ui/Toast";
 
-import TablesView   from "./components/views/TablesView";
-import OrderView    from "./components/views/OrderView";
-import TakeawayView from "./components/views/TakeawayView";
-import StockView    from "./components/views/StockView";
-import MenuView     from "./components/views/MenuView";
-import ReportsView  from "./components/views/ReportsView";
-import UsersView    from "./components/views/UsersView";
-import SettingsView from "./components/views/SettingsView";
+import TablesView     from "./components/views/TablesView";
+import OrderView      from "./components/views/OrderView";
+import TakeawayView   from "./components/views/TakeawayView";
+import OnlineOrdersView from "./components/views/OnlineOrdersView";
+import StockView      from "./components/views/StockView";
+import MenuView       from "./components/views/MenuView";
+import ReportsView    from "./components/views/ReportsView";
+import UsersView      from "./components/views/UsersView";
+import SettingsView   from "./components/views/SettingsView";
 
 function AppShell() {
   const { currentUser, currentView } = useApp();
@@ -22,6 +23,7 @@ function AppShell() {
     tables:   <TablesView />,
     order:    <OrderView />,
     takeaway: <TakeawayView />,
+    online:   <OnlineOrdersView />,
     stock:    <StockView />,
     menu:     <MenuView />,
     reports:  <ReportsView />,

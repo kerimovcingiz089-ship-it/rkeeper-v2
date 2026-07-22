@@ -40,6 +40,8 @@ export function defaultData(): AppData {
     orders: {},
     history: [],
     takeawayOrders: [],
+    onlineOrders: [],
+    nextOnlineOrderNo: 1,
     nextTakeawayNo: 1,
     nextReceiptNo: 1,
     users: [
@@ -63,6 +65,8 @@ export function loadData(): AppData {
       orders:         parsed.orders         || {},
       history:        parsed.history        || [],
       takeawayOrders: parsed.takeawayOrders || [],
+      onlineOrders:   parsed.onlineOrders   || [],
+      nextOnlineOrderNo: parsed.nextOnlineOrderNo || 1,
       nextTakeawayNo: parsed.nextTakeawayNo || 1,
       nextReceiptNo:  parsed.nextReceiptNo  || 1,
       users:          parsed.users?.length          ? parsed.users          : def.users,

@@ -4,6 +4,7 @@ import { initialsOf } from "../lib/utils";
 const NAV = [
   { id: "tables",   label: "Masalar",      icon: "⊞" },
   { id: "takeaway", label: "Paket",         icon: "📦" },
+  { id: "online",   label: "Onlayn",        icon: "🌐", badge: true },
   { id: "stock",    label: "Stok",          icon: "🗂" },
   { id: "menu",     label: "Menyu",         icon: "☰" },
   { id: "reports",  label: "Hesabat",       icon: "📊" },
@@ -12,12 +13,12 @@ const NAV = [
 ] as const;
 
 const ROLE_NAV: Record<string, string[]> = {
-  admin: ["tables", "order", "takeaway", "stock", "menu", "reports", "users", "settings"],
-  kassa: ["tables", "order", "takeaway", "stock", "reports"],
+  admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "users", "settings"],
+  kassa: ["tables", "order", "takeaway", "online", "stock", "reports"],
 };
 
 export default function Sidebar() {
-  const { currentUser, currentView, switchView, logout } = useApp();
+  const { currentUser, currentView, switchView, logout, newOnlineOrdersCount } = useApp();
   if (!currentUser) return null;
 
   const allowed = ROLE_NAV[currentUser.role] || [];
@@ -38,7 +39,7 @@ export default function Sidebar() {
           {NAV.filter(n => allowed.includes(n.id)).map(n => (
             <button key={n.id}
               onClick={() => switchView(n.id as any)}
-              className={`w-14 h-14 flex flex-col items-center justify-center gap-1 rounded-xl text-[9px] font-bold tracking-wide transition-all
+              className={`w-14 h-14 flex flex-col items-center justify-center gap-1 rounded-xl text-[9px] font-bold tracking-wide transition-all relative
                 ${currentView === n.id
                   ? "text-white"
                   : "text-[#9088A0] hover:bg-[#1B1D27] hover:text-white"}`}
@@ -47,6 +48,12 @@ export default function Sidebar() {
                 : {}}>
               <span className="text-base">{n.icon}</span>
               {n.label}
+              {"badge" in n && n.badge && newOnlineOrdersCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-[9px] font-extrabold text-white px-1"
+                  style={{ background: "linear-gradient(135deg,#FF6B6B,#EE5A24)", boxShadow: "0 2px 8px rgba(255,107,107,.5)" }}>
+                  {newOnlineOrdersCount}
+                </span>
+              )}
             </button>
           ))}
         </nav>
@@ -70,13 +77,19 @@ export default function Sidebar() {
         {NAV.filter(n => allowed.includes(n.id)).slice(0, 5).map(n => (
           <button key={n.id}
             onClick={() => switchView(n.id as any)}
-            className={`flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide px-2 py-1 rounded-xl transition-all
+            className={`flex flex-col items-center gap-0.5 text-[8px] font-bold tracking-wide px-2 py-1 rounded-xl transition-all relative
               ${currentView === n.id ? "text-white" : "text-[#9088A0]"}`}
             style={currentView === n.id
               ? { background: "linear-gradient(135deg,rgba(108,92,231,.5),rgba(18,199,180,.3))" }
               : {}}>
             <span className="text-base">{n.icon}</span>
             {n.label}
+            {"badge" in n && n.badge && newOnlineOrdersCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] flex items-center justify-center rounded-full text-[8px] font-extrabold text-white px-0.5"
+                style={{ background: "linear-gradient(135deg,#FF6B6B,#EE5A24)" }}>
+                {newOnlineOrdersCount}
+              </span>
+            )}
           </button>
         ))}
         <button onClick={logout}

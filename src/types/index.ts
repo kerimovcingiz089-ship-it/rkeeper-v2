@@ -70,6 +70,20 @@ export interface Settings {
   currency: string;
 }
 
+export type OnlineOrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
+
+export interface OnlineOrder {
+  id: string;
+  orderNo: number;
+  customerName: string;
+  customerPhone?: string;
+  items: HistoryLine[];
+  total: number;
+  status: OnlineOrderStatus;
+  note?: string;
+  createdAt: number;
+}
+
 export interface AppData {
   settings: Settings;
   tables: AppTable[];
@@ -78,6 +92,8 @@ export interface AppData {
   orders: Record<string, { items: OrderLine[] }>;
   history: HistoryRecord[];
   takeawayOrders: TakeawayOrder[];
+  onlineOrders: OnlineOrder[];
+  nextOnlineOrderNo: number;
   nextTakeawayNo: number;
   nextReceiptNo: number;
   users: User[];
