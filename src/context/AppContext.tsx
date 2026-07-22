@@ -309,11 +309,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveData(next);
 
       // Update badge immediately
-      if (wasNew) {
-        setNewOnlineOrdersCount(n => Math.max(0, n - 1));
-      }
       if (status === "completed") {
-        setNewOnlineOrdersCount(0);
+        setNewOnlineOrdersCount(n => Math.max(0, n - 1));
       }
 
       return next;
