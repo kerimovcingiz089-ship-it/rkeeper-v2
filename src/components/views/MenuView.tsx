@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useApp } from "../../context/AppContext";
 import { uid, fmtMoney } from "../../lib/utils";
 import Modal from "../ui/Modal";
-import { addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory } from "../../lib/supabaseApi";
+import { addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory, uploadProductImage } from "../../lib/supabaseApi";
 
 export default function MenuView() {
   const { data, setData, currentUser, toast, refreshProducts, refreshCategories } = useApp();
   const isAdmin = currentUser?.role === "admin";
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [modal, setModal] = useState<
     | { type: "addCat" }
@@ -20,6 +21,9 @@ export default function MenuView() {
   const [itemName, setItemName] = useState("");
   const [itemPrice, setItemPrice] = useState("");
   const [itemCatId, setItemCatId] = useState("");
+  const [itemImage, setItemImage] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   if (!isAdmin) {
     return <div className="py-16 text-center text-gray-400 text-sm">Bu bölməyə giriş icazəniz yoxdur.</div>;
@@ -31,11 +35,24 @@ export default function MenuView() {
     setCatName(cat.name);
     setModal({ type: "editCat", id });
   }
-  function openAddItem(catId: string) { setItemName(""); setItemPrice(""); setItemCatId(catId); setModal({ type: "addItem", catId }); }
+  function openAddItem(catId: string) {
+    setItemName(""); setItemPrice(""); setItemCatId(catId); setItemImage(""); setImageFile(null);
+    setModal({ type: "addItem", catId });
+  }
   function openEditItem(id: string) {
     const item = data.items.find(i => i.id === id)!;
     setItemName(item.name); setItemPrice(String(item.price)); setItemCatId(item.categoryId);
+    setItemImage(item.imageUrl || ""); setImageFile(null);
     setModal({ type: "editItem", id });
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onload = (ev) => setItemImage(ev.target?.result as string);
+    reader.readAsDataURL(file);
   }
 
   async function saveCat() {
@@ -59,21 +76,28 @@ export default function MenuView() {
   async function saveItem() {
     const price = parseFloat(itemPrice);
     if (!itemName.trim() || isNaN(price) || price < 0) { toast("Düzgün ad və qiymət daxil edin"); return; }
+    setUploading(true);
+    let imageUrl = itemImage;
+    if (imageFile) {
+      const uploaded = await uploadProductImage(imageFile);
+      if (uploaded) imageUrl = uploaded;
+    }
     if (modal?.type === "addItem") {
       setModal(null);
-      const newItem = { id: uid("i"), name: itemName.trim(), price, categoryId: itemCatId, stock: 0 };
+      const newItem = { id: uid("i"), name: itemName.trim(), price, categoryId: itemCatId, stock: 0, imageUrl };
       setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
-      await addProduct(itemName.trim(), price, itemCatId);
+      await addProduct(itemName.trim(), price, itemCatId, imageUrl);
       await refreshProducts();
       toast("Məhsul əlavə edildi");
     } else if (modal?.type === "editItem") {
       const id = (modal as any).id;
       setModal(null);
-      setData(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? { ...i, name: itemName.trim(), price, categoryId: itemCatId } : i) }));
-      await updateProduct(id, itemName.trim(), price, itemCatId);
+      setData(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? { ...i, name: itemName.trim(), price, categoryId: itemCatId, imageUrl } : i) }));
+      await updateProduct(id, itemName.trim(), price, itemCatId, imageUrl);
       await refreshProducts();
       toast("Məhsul yeniləndi");
     }
+    setUploading(false);
   }
 
   async function delItem(id: string) {
@@ -125,6 +149,11 @@ export default function MenuView() {
                 items.map(item => (
                   <div key={item.id} className="flex justify-between items-center px-5 py-3 border-b border-gray-50 last:border-0">
                     <div className="flex items-center gap-3">
+                      {item.imageUrl ? (
+                        <img src={item.imageUrl} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg">🍰</div>
+                      )}
                       <span className="font-bold text-sm">{item.name}</span>
                       <span className="text-sm text-gray-400">{fmtMoney(item.price, data.settings.currency)}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
@@ -167,7 +196,27 @@ export default function MenuView() {
       {(modal?.type === "addItem" || modal?.type === "editItem") && (
         <Modal onClose={() => setModal(null)}>
           <h3 className="text-lg font-extrabold mb-1">{modal.type === "addItem" ? "Yeni yemək" : "Yeməyi redaktə et"}</h3>
-          <label className="block text-xs font-bold text-gray-400 mt-4 mb-1.5">Yemək adı</label>
+
+          {/* Image upload */}
+          <label className="block text-xs font-bold text-gray-400 mt-4 mb-1.5">Şəkil</label>
+          <div className="flex items-center gap-3 mb-3">
+            {itemImage ? (
+              <div className="relative">
+                <img src={itemImage} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
+                <button onClick={() => { setItemImage(""); setImageFile(null); }}
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">✕</button>
+              </div>
+            ) : (
+              <button onClick={() => fileRef.current?.click()}
+                className="w-20 h-20 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-gray-400 hover:border-[#6C5CE7] hover:text-[#6C5CE7] transition">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+                <span className="text-[9px] font-bold mt-1">Şəkil</span>
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
+          </div>
+
+          <label className="block text-xs font-bold text-gray-400 mb-1.5">Yemək adı</label>
           <input autoFocus value={itemName} onChange={e => setItemName(e.target.value)}
             placeholder="Məs. Mərcimək Şorbası"
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#6C5CE7]" />
@@ -186,7 +235,10 @@ export default function MenuView() {
           )}
           <div className="flex gap-2 mt-5">
             <button onClick={() => setModal(null)} className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm font-bold hover:bg-gray-50">Ləğv et</button>
-            <button onClick={saveItem} className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold" style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
+            <button onClick={saveItem} disabled={uploading}
+              className="flex-1 py-2.5 rounded-xl text-white text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
+              {uploading && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
               {modal.type === "addItem" ? "Əlavə et" : "Yadda saxla"}
             </button>
           </div>

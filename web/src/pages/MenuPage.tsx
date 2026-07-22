@@ -88,9 +88,13 @@ export default function MenuPage({ categories, products, cart, addToCart, update
             return (
               <div key={p.id} className="group bg-white rounded-3xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 {/* Image area */}
-                <div className="relative h-44 flex items-center justify-center overflow-hidden"
-                  style={{ background: `linear-gradient(135deg,hsl(${(i * 37 + 340) % 360},85%,97%),hsl(${(i * 37 + 20) % 360},75%,95%))` }}>
-                  <span className="text-5xl group-hover:scale-110 transition-transform duration-300">🍰</span>
+                  <div className="relative h-44 flex items-center justify-center overflow-hidden"
+                    style={{ background: `linear-gradient(135deg,hsl(${(i * 37 + 340) % 360},85%,97%),hsl(${(i * 37 + 20) % 360},75%,95%))` }}>
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <span className="text-5xl group-hover:scale-110 transition-transform duration-300">🍰</span>
+                    )}
                   {catName && (
                     <span className="absolute top-3 left-3 text-[10px] font-bold px-3 py-1 rounded-full bg-white/80 backdrop-blur-sm text-gray-500">
                       {catName}
@@ -155,8 +159,12 @@ export default function MenuPage({ categories, products, cart, addToCart, update
             <div className="flex-1 overflow-y-auto p-6 space-y-3">
               {cart.map(c => (
                 <div key={c.product.id} className="flex items-center gap-4 bg-rose-50/50 rounded-2xl p-4">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0"
-                    style={{ background: `linear-gradient(135deg,hsl(${(parseInt(c.product.id) * 37 + 340) % 360},80%,95%),hsl(${(parseInt(c.product.id) * 37 + 20) % 360},70%,93%))` }}>🍰</div>
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 overflow-hidden"
+                    style={{ background: `linear-gradient(135deg,hsl(${(parseInt(c.product.id) * 37 + 340) % 360},80%,95%),hsl(${(parseInt(c.product.id) * 37 + 20) % 360},70%,93%))` }}>
+                    {c.product.imageUrl ? (
+                      <img src={c.product.imageUrl} alt={c.product.name} className="w-full h-full object-cover" />
+                    ) : "🍰"}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-bold text-sm text-gray-900 truncate">{c.product.name}</div>
                     <div className="text-xs text-rose-400 font-semibold">₼{c.product.price.toFixed(2)}</div>

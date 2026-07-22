@@ -20,6 +20,7 @@ export interface MenuItem {
   price: number;
   categoryId: string;
   stock: number;
+  imageUrl?: string;
 }
 
 export interface OrderLine {

@@ -11,6 +11,7 @@ export interface Product {
   price: number;
   categoryId: string;
   stock: number;
+  imageUrl?: string;
 }
 
 export async function fetchCategories(): Promise<Category[]> {
@@ -28,6 +29,7 @@ export async function fetchProducts(): Promise<Product[]> {
     price: Number(item.price),
     categoryId: String(item.category),
     stock: Number(item.stock ?? 0),
+    imageUrl: item.image_url || "",
   }));
 }
 

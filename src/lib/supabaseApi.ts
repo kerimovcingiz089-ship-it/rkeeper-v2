@@ -3,6 +3,20 @@ import type { AppData, MenuItem, HistoryRecord, User } from "../types";
 
 /* ─── Products ─────────────────────────────────────────── */
 
+export async function uploadProductImage(file: File): Promise<string | null> {
+  try {
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `products/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+    if (error) { console.error("Upload image:", error); return null; }
+    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+    return data.publicUrl;
+  } catch (err) {
+    console.error("uploadProductImage:", err);
+    return null;
+  }
+}
+
 export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
   try {
     const { data: rows, error } = await supabase.from("products").select("*");
@@ -20,6 +34,7 @@ export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
         price: Number(item.price),
         categoryId: catId,
         stock: item.stock != null ? Number(item.stock) : 0,
+        imageUrl: item.image_url || "",
       };
     });
   } catch (err) {
@@ -28,18 +43,18 @@ export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
   }
 }
 
-export async function addProduct(name: string, price: number, categoryId: string): Promise<void> {
+export async function addProduct(name: string, price: number, categoryId: string, imageUrl: string = ""): Promise<void> {
   try {
-    const { error } = await supabase.from("products").insert([{ name, price: Number(price), category: Number(categoryId), stock: 0 }]);
+    const { error } = await supabase.from("products").insert([{ name, price: Number(price), category: Number(categoryId), stock: 0, image_url: imageUrl }]);
     if (error) console.error("Supabase insert product:", error);
   } catch (err) {
     console.error("addProduct:", err);
   }
 }
 
-export async function updateProduct(id: string, name: string, price: number, categoryId: string): Promise<void> {
+export async function updateProduct(id: string, name: string, price: number, categoryId: string, imageUrl: string = ""): Promise<void> {
   try {
-    const { error } = await supabase.from("products").update({ name, price: Number(price), category: Number(categoryId) }).eq("id", id);
+    const { error } = await supabase.from("products").update({ name, price: Number(price), category: Number(categoryId), image_url: imageUrl }).eq("id", id);
     if (error) console.error("Supabase update product:", error);
   } catch (err) {
     console.error("updateProduct:", err);

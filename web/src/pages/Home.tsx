@@ -100,9 +100,13 @@ export default function Home({ products, addToCart }: { products: Product[]; add
                   {/* Image area */}
                   <div className="relative h-48 flex items-center justify-center overflow-hidden"
                     style={{ background: `linear-gradient(135deg,hsl(${(i * 40) % 360},80%,97%),hsl(${(i * 40 + 30) % 360},70%,95%))` }}>
-                    <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
-                      {["🍰", "🧁", "🍮", "🍩", "🎂", "🍪"][i % 6]}
-                    </span>
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                    ) : (
+                      <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
+                        {["🍰", "🧁", "🍮", "🍩", "🎂", "🍪"][i % 6]}
+                      </span>
+                    )}
                     {/* Decorative dot */}
                     <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/60 backdrop-blur-sm flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition">
                       ❤️

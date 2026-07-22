@@ -141,6 +141,9 @@ export default function OnlineOrdersView() {
                             return (
                               <div key={i} className="flex justify-between items-center">
                                 <span className="flex items-center gap-1.5">
+                                  {product?.imageUrl ? (
+                                    <img src={product.imageUrl} alt={item.name} className="w-5 h-5 rounded object-cover shrink-0" />
+                                  ) : null}
                                   {item.qty}× {item.name}
                                   {status === "new" && !hasEnough && (
                                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">
