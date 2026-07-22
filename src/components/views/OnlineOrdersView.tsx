@@ -18,7 +18,39 @@ export default function OnlineOrdersView() {
   const orders = data.onlineOrders;
   const hasNew = orders.some(o => o.status === "new");
 
+  function checkStock(order: { items: { name: string; qty: number }[] }): { ok: boolean; missing: string[] } {
+    const missing: string[] = [];
+    for (const line of order.items) {
+      const product = data.items.find(p => p.name === line.name);
+      if (!product || product.stock < line.qty) {
+        const avail = product ? product.stock : 0;
+        missing.push(`${line.name} (stok: ${avail}, lazım: ${line.qty})`);
+      }
+    }
+    return { ok: missing.length === 0, missing };
+  }
+
+  function handleAccept(order: { id: string; items: { name: string; qty: number }[] }) {
+    const { ok, missing } = checkStock(order);
+    if (!ok) {
+      toast("Stok kifayət etmir: " + missing.join(", "));
+      return;
+    }
+    updateOnlineOrderStatus(order.id, "preparing");
+    toast("Sifariş qəbul edildi");
+  }
+
   function handleStatusChange(id: string, newStatus: OnlineOrderStatus) {
+    if (newStatus === "completed") {
+      const order = orders.find(o => o.id === id);
+      if (order) {
+        const { ok, missing } = checkStock(order);
+        if (!ok) {
+          toast("Stok kifayət etmir: " + missing.join(", "));
+          return;
+        }
+      }
+    }
     updateOnlineOrderStatus(id, newStatus);
     toast(`Sifariş statusu yeniləndi: ${STATUS_CONFIG[newStatus].label}`);
   }
@@ -66,7 +98,7 @@ export default function OnlineOrdersView() {
           </p>
           <div className="flex items-center gap-2 mt-5">
             <span className="w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-            <span className="text-xs text-gray-400 font-medium">Gözləmə rejimi</span>
+            <span className="text-xs text-gray-400 font-medium">Gözləmə rejimi · Hər 30 saniyədə yoxlanılır</span>
           </div>
         </div>
       ) : (
@@ -84,71 +116,93 @@ export default function OnlineOrdersView() {
                   <span className="text-[11px] text-gray-400 font-bold">({group.length})</span>
                 </div>
                 <div className="space-y-2">
-                  {group.map(order => (
-                    <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-4 transition hover:shadow-md"
-                      style={status === "new" ? { borderLeft: `3px solid ${cfg.color}` } : {}}>
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <span className="font-extrabold text-sm text-gray-900">#{order.orderNo}</span>
-                          <span className="text-sm text-gray-500 ml-2">{order.customerName}</span>
-                          {order.customerPhone && (
-                            <span className="text-xs text-gray-400 ml-2">{order.customerPhone}</span>
-                          )}
-                        </div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ color: cfg.color, background: cfg.bg }}>
-                          {cfg.label}
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-gray-600 mb-2 space-y-0.5">
-                        {order.items.map((item, i) => (
-                          <div key={i} className="flex justify-between">
-                            <span>{item.qty}× {item.name}</span>
-                            <span className="text-gray-400">{fmtMoney(item.price * item.qty)}</span>
+                  {group.map(order => {
+                    const stockCheck = status === "new" ? checkStock(order) : null;
+                    return (
+                      <div key={order.id} className="bg-white border border-gray-100 rounded-2xl p-4 transition hover:shadow-md"
+                        style={status === "new" ? { borderLeft: `3px solid ${cfg.color}` } : {}}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <span className="font-extrabold text-sm text-gray-900">#{order.orderNo}</span>
+                            <span className="text-sm text-gray-500 ml-2">{order.customerName}</span>
+                            {order.customerPhone && (
+                              <span className="text-xs text-gray-400 ml-2">{order.customerPhone}</span>
+                            )}
                           </div>
-                        ))}
-                      </div>
-
-                      {order.note && (
-                        <div className="text-xs text-gray-400 italic mb-2 px-2 py-1.5 bg-gray-50 rounded-lg">
-                          📝 {order.note}
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-lg" style={{ color: cfg.color, background: cfg.bg }}>
+                            {cfg.label}
+                          </span>
                         </div>
-                      )}
 
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-                        <span className="text-sm font-extrabold text-gray-900">{fmtMoney(order.total)}</span>
-                        <div className="flex gap-1.5">
-                          {status === "new" && (
-                            <>
-                              <button onClick={() => handleStatusChange(order.id, "preparing")}
+                        <div className="text-xs text-gray-600 mb-2 space-y-0.5">
+                          {order.items.map((item, i) => {
+                            const product = data.items.find(p => p.name === item.name);
+                            const hasEnough = product && product.stock >= item.qty;
+                            return (
+                              <div key={i} className="flex justify-between items-center">
+                                <span className="flex items-center gap-1.5">
+                                  {item.qty}× {item.name}
+                                  {status === "new" && !hasEnough && (
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-50 text-red-500">
+                                      Stok: {product ? product.stock : 0}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="text-gray-400">{fmtMoney(item.price * item.qty)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {order.note && (
+                          <div className="text-xs text-gray-400 italic mb-2 px-2 py-1.5 bg-gray-50 rounded-lg">
+                            📝 {order.note}
+                          </div>
+                        )}
+
+                        {/* Stock warning */}
+                        {stockCheck && !stockCheck.ok && (
+                          <div className="text-[11px] font-semibold text-red-500 bg-red-50 rounded-lg px-3 py-2 mb-2">
+                            ⚠️ Stok kifayət etmir: {stockCheck.missing.join("; ")}
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                          <span className="text-sm font-extrabold text-gray-900">{fmtMoney(order.total)}</span>
+                          <div className="flex gap-1.5">
+                            {status === "new" && (
+                              <>
+                                <button onClick={() => handleAccept(order)}
+                                  disabled={stockCheck ? !stockCheck.ok : false}
+                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+                                  style={{ background: "#E0A23B" }}>
+                                  Qəbul et
+                                </button>
+                                <button onClick={() => handleStatusChange(order.id, "cancelled")}
+                                  className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-400 border border-gray-200 hover:bg-gray-50 transition">
+                                  Ləğv et
+                                </button>
+                              </>
+                            )}
+                            {status === "preparing" && (
+                              <button onClick={() => handleStatusChange(order.id, "ready")}
                                 className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
-                                style={{ background: "#E0A23B" }}>
-                                Qəbul et
+                                style={{ background: "#12C7B4" }}>
+                                Hazırdır
                               </button>
-                              <button onClick={() => handleStatusChange(order.id, "cancelled")}
-                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-400 border border-gray-200 hover:bg-gray-50 transition">
-                                Ləğv et
+                            )}
+                            {status === "ready" && (
+                              <button onClick={() => handleStatusChange(order.id, "completed")}
+                                className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
+                                style={{ background: "#6C5CE7" }}>
+                                Təhvil verildi
                               </button>
-                            </>
-                          )}
-                          {status === "preparing" && (
-                            <button onClick={() => handleStatusChange(order.id, "ready")}
-                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
-                              style={{ background: "#12C7B4" }}>
-                              Hazırdır
-                            </button>
-                          )}
-                          {status === "ready" && (
-                            <button onClick={() => handleStatusChange(order.id, "completed")}
-                              className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:-translate-y-0.5"
-                              style={{ background: "#6C5CE7" }}>
-                              Təhvil verildi
-                            </button>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );

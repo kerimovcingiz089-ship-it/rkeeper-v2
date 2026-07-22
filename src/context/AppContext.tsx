@@ -251,6 +251,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  /* ── auto-poll online orders every 30s ── */
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const onlineOrders = await fetchOnlineOrders();
+      if (onlineOrders) {
+        setDataRaw((prev) => {
+          const newCount = onlineOrders.filter(o => o.status === "new").length;
+          const prevCount = prev.onlineOrders.filter(o => o.status === "new").length;
+          if (newCount > prevCount) {
+            setNewOnlineOrdersCount(n => n + (newCount - prevCount));
+          }
+          const next = { ...prev, onlineOrders };
+          saveData(next);
+          return next;
+        });
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   /* ── track new online orders ── */
   useEffect(() => {
     const newCount = data.onlineOrders.filter(o => o.status === "new").length;
