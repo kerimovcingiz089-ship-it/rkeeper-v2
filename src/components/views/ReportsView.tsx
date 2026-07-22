@@ -1,10 +1,35 @@
 import { useApp } from "../../context/AppContext";
 import { fmtMoney, fmtTime, todayStr } from "../../lib/utils";
+import type { HistoryRecord } from "../../types";
 
 export default function ReportsView() {
   const { data, reportDate, setReportDate } = useApp();
 
-  const dayHistory = data.history
+  // Merge online orders into history for reports
+  const onlineAsHistory: HistoryRecord[] = data.onlineOrders
+    .filter(o => o.status === "completed")
+    .map(o => {
+      const d = new Date(o.createdAt);
+      const dateStr =
+        d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+      return {
+        id: "online-" + o.id,
+        tableName: "🌐 Onlayn #" + o.orderNo,
+        items: o.items,
+        total: o.total,
+        paymentMethod: "cash" as const,
+        closedBy: o.customerName,
+        closedAt: o.createdAt,
+        dateStr,
+        isTakeaway: true,
+      };
+    });
+
+  const allHistory = [...data.history, ...onlineAsHistory];
+
+  const dayHistory = allHistory
     .filter(h => h.dateStr === reportDate)
     .sort((a, b) => b.closedAt - a.closedAt);
 
@@ -13,9 +38,11 @@ export default function ReportsView() {
   const avg = count ? total / count : 0;
 
   const tableCount = dayHistory.filter(h => !h.isTakeaway).length;
-  const takeawayCount = dayHistory.filter(h => h.isTakeaway).length;
+  const takeawayCount = dayHistory.filter(h => h.isTakeaway && !h.tableName.startsWith("🌐")).length;
+  const onlineCount = dayHistory.filter(h => h.tableName.startsWith("🌐")).length;
   const tableTotal = dayHistory.filter(h => !h.isTakeaway).reduce((s, h) => s + h.total, 0);
-  const takeawayTotal = dayHistory.filter(h => h.isTakeaway).reduce((s, h) => s + h.total, 0);
+  const takeawayTotal = dayHistory.filter(h => h.isTakeaway && !h.tableName.startsWith("🌐")).reduce((s, h) => s + h.total, 0);
+  const onlineTotal = dayHistory.filter(h => h.tableName.startsWith("🌐")).reduce((s, h) => s + h.total, 0);
 
   // Per-item stats
   const itemSales: Record<string, { qty: number; revenue: number }> = {};
@@ -33,8 +60,8 @@ export default function ReportsView() {
   return (
     <div>
       {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-        <div className="bg-white border border-gray-200 rounded-2xl p-5 col-span-2 sm:col-span-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-5">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 col-span-2 sm:col-span-3 lg:col-span-1">
           <div className="text-xs text-gray-400 mb-2">Ümumi satış</div>
           <div className="text-2xl font-extrabold tabular-nums">{fmtMoney(total, data.settings.currency)}</div>
         </div>
@@ -53,6 +80,14 @@ export default function ReportsView() {
           </div>
           <div className="text-2xl font-extrabold tabular-nums">{takeawayCount}</div>
           <div className="text-xs text-gray-400 mt-1">{fmtMoney(takeawayTotal, data.settings.currency)}</div>
+        </div>
+        <div className="bg-white border border-gray-200 rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-6 h-6 rounded-lg bg-purple-50 flex items-center justify-center text-[11px]">🌐</span>
+            <span className="text-xs text-gray-400">Onlayn</span>
+          </div>
+          <div className="text-2xl font-extrabold tabular-nums">{onlineCount}</div>
+          <div className="text-xs text-gray-400 mt-1">{fmtMoney(onlineTotal, data.settings.currency)}</div>
         </div>
         <div className="bg-white border border-gray-200 rounded-2xl p-5">
           <div className="text-xs text-gray-400 mb-2">Orta çek</div>

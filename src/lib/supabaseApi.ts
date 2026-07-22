@@ -144,6 +144,15 @@ export async function fetchOnlineOrders(): Promise<import("../types").OnlineOrde
   }
 }
 
+export async function updateOnlineOrderStatus(id: string, status: string): Promise<void> {
+  try {
+    const { error } = await supabase.from("online_orders").update({ status }).eq("id", id);
+    if (error) console.error("Supabase update online_order status:", error);
+  } catch (err) {
+    console.error("updateOnlineOrderStatus:", err);
+  }
+}
+
 export async function resetAllData(): Promise<void> {
   try {
     await supabase.from("products").delete().neq("id", -1);

@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus } from "../lib/supabaseApi";
 
 /* ─── Types ─────────────────────────────────────────────── */
 type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "users" | "settings";
@@ -272,6 +272,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       saveData(next);
       return next;
     });
+    apiUpdateOnlineOrderStatus(id, status);
   }
 
   /* ── stock helper ── */
