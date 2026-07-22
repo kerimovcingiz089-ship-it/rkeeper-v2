@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { fmtMoney } from "../../lib/utils";
+import { uid, fmtMoney } from "../../lib/utils";
 import Modal from "../ui/Modal";
 import { addProduct, updateProduct, deleteProduct, addCategory, updateCategory, deleteCategory } from "../../lib/supabaseApi";
 
