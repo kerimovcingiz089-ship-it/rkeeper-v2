@@ -3,11 +3,38 @@ import type { AppData, MenuItem, HistoryRecord, User } from "../types";
 
 /* ─── Products ─────────────────────────────────────────── */
 
+function compressImage(file: File, maxDim = 400, quality = 0.8): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxDim || height > maxDim) {
+        const ratio = Math.min(maxDim / width, maxDim / height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error("Canvas toBlob failed"))),
+        "image/jpeg",
+        quality
+      );
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Image load failed")); };
+    img.src = url;
+  });
+}
+
 export async function uploadProductImage(file: File): Promise<string | null> {
   try {
-    const ext = file.name.split(".").pop() || "jpg";
-    const path = `products/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { contentType: file.type });
+    const compressed = await compressImage(file);
+    const path = `products/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+    const { error } = await supabase.storage.from("product-images").upload(path, compressed, { contentType: "image/jpeg" });
     if (error) { console.error("Upload image:", error); return null; }
     const { data } = supabase.storage.from("product-images").getPublicUrl(path);
     return data.publicUrl;
