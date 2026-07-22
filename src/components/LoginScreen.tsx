@@ -8,6 +8,7 @@ export default function LoginScreen() {
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,81 +26,157 @@ export default function LoginScreen() {
     }
   }
 
+  const inputStyle = (field: string) => ({
+    background: "rgba(255,255,255,.06)",
+    border: `1.5px solid ${focused === field ? "#12C7B4" : "rgba(255,255,255,.12)"}`,
+    boxShadow: focused === field ? "0 0 0 3px rgba(18,199,180,.12)" : "none",
+  });
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden z-[500]"
-      style={{ background: "linear-gradient(160deg,#0B0B12,#171522 55%,#1B1730)" }}>
+    <div className="fixed inset-0 flex z-[500] overflow-hidden">
+      {/* ── LEFT: Brand panel ── */}
+      <div className="hidden lg:flex relative flex-col items-center justify-center w-[52%] overflow-hidden"
+        style={{ background: "linear-gradient(160deg,#0B0B12 0%,#171522 45%,#1B1730 100%)" }}>
 
-      {/* Blobs */}
-      <div className="blob absolute w-[440px] h-[440px] rounded-full -top-28 -left-24 opacity-50 animate-[floatBlob_11s_ease-in-out_infinite]"
-        style={{ background: "#6C5CE7", filter: "blur(75px)" }} />
-      <div className="blob absolute w-[400px] h-[400px] rounded-full -bottom-36 -right-20 opacity-45 animate-[floatBlob_11s_ease-in-out_infinite_-3.5s]"
-        style={{ background: "#12C7B4", filter: "blur(75px)" }} />
-      <div className="blob absolute w-[320px] h-[320px] rounded-full opacity-30 animate-[floatBlob_11s_ease-in-out_infinite_-7s]"
-        style={{ background: "#E0A23B", filter: "blur(75px)", top: "38%", left: "58%" }} />
+        {/* Animated blobs */}
+        <div className="absolute w-[500px] h-[500px] rounded-full -top-32 -left-32 opacity-50 animate-[floatBlob_11s_ease-in-out_infinite]"
+          style={{ background: "#6C5CE7", filter: "blur(90px)" }} />
+        <div className="absolute w-[420px] h-[420px] rounded-full -bottom-40 -right-24 opacity-45 animate-[floatBlob_11s_ease-in-out_infinite_-3.5s]"
+          style={{ background: "#12C7B4", filter: "blur(80px)" }} />
+        <div className="absolute w-[300px] h-[300px] rounded-full opacity-25 animate-[floatBlob_11s_ease-in-out_infinite_-7s]"
+          style={{ background: "#E0A23B", filter: "blur(70px)", top: "35%", left: "55%" }} />
 
-      {/* Card */}
-      <div className={`relative z-10 w-[390px] max-w-[90vw] rounded-3xl p-10 text-center text-white transition-all
-          ${shake ? "animate-[shakeAnim_.4s]" : ""}`}
-        style={{
-          background: "rgba(255,255,255,0.07)",
-          border: "1px solid rgba(255,255,255,0.14)",
-          backdropFilter: "blur(22px)",
-          WebkitBackdropFilter: "blur(22px)",
-          boxShadow: "0 30px 90px rgba(0,0,0,.5)"
-        }}>
+        {/* Content */}
+        <div className="relative z-10 text-center text-white px-10">
+          {/* Logo */}
+          <div className="w-24 h-24 rounded-3xl mx-auto mb-8 flex items-center justify-center text-5xl"
+            style={{
+              background: "linear-gradient(135deg,#6C5CE7,#12C7B4)",
+              boxShadow: "0 20px 50px rgba(108,92,231,.5)",
+            }}>
+            🍰
+          </div>
 
-        {/* Logo */}
-        <div className="w-14 h-14 rounded-2xl mx-auto mb-5 flex items-center justify-center text-2xl font-extrabold shadow-lg"
-          style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)", boxShadow: "0 12px 28px rgba(108,92,231,.45)" }}>
-          🍰
+          <h1 className="text-4xl font-extrabold tracking-tight mb-3">{data.settings.name}</h1>
+          <p className="text-white/50 text-base font-medium">Şirin dadların ünvanı</p>
+
+          {/* Decorative dots */}
+          <div className="flex items-center justify-center gap-2 mt-10">
+            <div className="w-2 h-2 rounded-full bg-[#6C5CE7] opacity-60" />
+            <div className="w-2 h-2 rounded-full bg-[#12C7B4] opacity-60" />
+            <div className="w-2 h-2 rounded-full bg-[#E0A23B] opacity-60" />
+          </div>
+        </div>
+      </div>
+
+      {/* ── RIGHT: Login form ── */}
+      <div className="flex-1 flex items-center justify-center relative overflow-hidden"
+        style={{ background: "linear-gradient(170deg,#13111C 0%,#1A1726 50%,#161425 100%)" }}>
+
+        {/* Subtle blobs */}
+        <div className="absolute w-[350px] h-[350px] rounded-full -top-20 -right-20 opacity-30 animate-[floatBlob_13s_ease-in-out_infinite]"
+          style={{ background: "#6C5CE7", filter: "blur(80px)" }} />
+        <div className="absolute w-[300px] h-[300px] rounded-full -bottom-28 -left-16 opacity-25 animate-[floatBlob_13s_ease-in-out_infinite_-5s]"
+          style={{ background: "#12C7B4", filter: "blur(70px)" }} />
+
+        {/* Mobile logo (shown on small screens) */}
+        <div className="lg:hidden absolute top-10 left-1/2 -translate-x-1/2 flex items-center gap-3 text-white">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl"
+            style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)" }}>
+            🍰
+          </div>
+          <span className="font-extrabold text-lg">{data.settings.name}</span>
         </div>
 
-        <h1 className="text-[22px] font-extrabold mb-1 tracking-tight">Xoş gəlmisiniz</h1>
-        <div className="text-[13px] text-white/75 font-semibold mb-1">{data.settings.name}</div>
-        <div className="text-[12px] text-white/50 italic mb-6">Şirin dadların ünvanı ✨</div>
+        {/* Card */}
+        <div className={`relative z-10 w-[400px] max-w-[88vw] rounded-3xl p-9 text-white transition-all
+            ${shake ? "animate-[shakeAnim_.4s]" : ""}`}
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            boxShadow: "0 30px 90px rgba(0,0,0,.45)",
+          }}>
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-left">
-          {/* Username */}
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm opacity-75">👤</span>
-            <input
-              type="text" value={username} onChange={e => setUsername(e.target.value)}
-              placeholder="İstifadəçi adı"
-              disabled={loading}
-              className="w-full pl-9 pr-3 py-3 rounded-xl text-sm text-white placeholder:text-white/40 focus:outline-none transition disabled:opacity-50"
-              style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.16)" }}
-              onFocus={e => (e.target.style.borderColor = "#12C7B4")}
-              onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,.16)")}
-            />
+          {/* Desktop heading */}
+          <div className="hidden lg:block mb-8">
+            <h2 className="text-2xl font-extrabold tracking-tight mb-1">Xoş gəlmisiniz</h2>
+            <p className="text-white/45 text-sm">Hesabınıza daxil olun</p>
           </div>
 
-          {/* Password */}
-          <div className="relative">
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm opacity-75">🔒</span>
-            <input
-              type="password" value={password} onChange={e => setPassword(e.target.value)}
-              placeholder="Şifrə"
-              disabled={loading}
-              className="w-full pl-9 pr-3 py-3 rounded-xl text-sm text-white placeholder:text-white/40 focus:outline-none transition disabled:opacity-50"
-              style={{ background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.16)" }}
-              onFocus={e => (e.target.style.borderColor = "#12C7B4")}
-              onBlur={e => (e.target.style.borderColor = "rgba(255,255,255,.16)")}
-            />
+          {/* Mobile heading */}
+          <div className="lg:hidden text-center mb-7">
+            <h2 className="text-xl font-extrabold tracking-tight mb-1">Xoş gəlmisiniz</h2>
+            <p className="text-white/45 text-sm">Hesabınıza daxil olun</p>
           </div>
 
-          {error && <p className="text-[#FF9393] text-[12.5px] font-semibold min-h-[18px]">{error}</p>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Username */}
+            <div>
+              <label className="block text-[11px] font-bold text-white/40 uppercase tracking-wider mb-2 ml-1">İstifadəçi adı</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm opacity-60">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </span>
+                <input
+                  type="text" value={username} onChange={e => setUsername(e.target.value)}
+                  placeholder="Istifadəçi adı"
+                  disabled={loading}
+                  onFocus={() => setFocused("user")}
+                  onBlur={() => setFocused(null)}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none transition disabled:opacity-50"
+                  style={inputStyle("user")}
+                />
+              </div>
+            </div>
 
-          <button type="submit" disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-[14.5px] text-white mt-2 transition hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70"
-            style={{ background: "linear-gradient(135deg,#6C5CE7,#12C7B4)", boxShadow: "0 4px 14px rgba(108,92,231,.4)" }}>
-            {loading ? (<><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>Giriş edilir...</>) : "Daxil ol"}
-          </button>
-        </form>
+            {/* Password */}
+            <div>
+              <label className="block text-[11px] font-bold text-white/40 uppercase tracking-wider mb-2 ml-1">Şifrə</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm opacity-60">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                </span>
+                <input
+                  type="password" value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="Şifrənizi daxil edin"
+                  disabled={loading}
+                  onFocus={() => setFocused("pass")}
+                  onBlur={() => setFocused(null)}
+                  className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm text-white placeholder:text-white/30 focus:outline-none transition disabled:opacity-50"
+                  style={inputStyle("pass")}
+                />
+              </div>
+            </div>
 
-        <div className="mt-5 text-[11.5px] text-white/45 rounded-xl p-3 leading-relaxed"
-          style={{ background: "rgba(255,255,255,.05)", border: "1px solid rgba(255,255,255,.08)" }}>
-          Demo hesablar:<br />
-          <b>admin / admin123</b> — Admin &nbsp;·&nbsp; <b>kassa / kassa123</b> — Kassir
+            {/* Error */}
+            <div className="min-h-[20px]">
+              {error && (
+                <p className="text-[#FF9393] text-xs font-semibold flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                  {error}
+                </p>
+              )}
+            </div>
+
+            {/* Submit */}
+            <button type="submit" disabled={loading || !username || !password}
+              className="w-full py-3.5 rounded-xl font-bold text-sm text-white mt-1 transition-all hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{
+                background: "linear-gradient(135deg,#6C5CE7,#12C7B4)",
+                boxShadow: "0 6px 24px rgba(108,92,231,.4)",
+              }}>
+              {loading ? (
+                <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Giriş edilir...</>
+              ) : (
+                <>
+                  Daxil ol
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </>
+              )}
+            </button>
+          </form>
         </div>
       </div>
     </div>
