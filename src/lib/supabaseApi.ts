@@ -30,7 +30,7 @@ export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
 
 export async function addProduct(name: string, price: number, categoryId: string): Promise<void> {
   try {
-    const { error } = await supabase.from("products").insert([{ name, price: Number(price), category: categoryId, stock: 0 }]);
+    const { error } = await supabase.from("products").insert([{ name, price: Number(price), category: Number(categoryId), stock: 0 }]);
     if (error) console.error("Supabase insert product:", error);
   } catch (err) {
     console.error("addProduct:", err);
@@ -39,7 +39,7 @@ export async function addProduct(name: string, price: number, categoryId: string
 
 export async function updateProduct(id: string, name: string, price: number, categoryId: string): Promise<void> {
   try {
-    const { error } = await supabase.from("products").update({ name, price: Number(price), category: categoryId }).eq("id", id);
+    const { error } = await supabase.from("products").update({ name, price: Number(price), category: Number(categoryId) }).eq("id", id);
     if (error) console.error("Supabase update product:", error);
   } catch (err) {
     console.error("updateProduct:", err);
