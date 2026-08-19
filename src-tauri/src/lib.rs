@@ -75,14 +75,21 @@ fn download_update(url: String) -> Result<String, String> {
 
 #[tauri::command]
 fn install_update(path: String) -> Result<(), String> {
-    Command::new(&path)
-        .args(["/S"])
-        .spawn()
+    let ps = format!(
+        "Start-Process -FilePath '{}' -ArgumentList '/S' -Verb RunAs -Wait",
+        path.replace('\\', "\\\\").replace('\'', "''")
+    );
+    let output = Command::new("powershell")
+        .args(["-NoProfile", "-Command", &ps])
+        .output()
         .map_err(|e| e.to_string())?;
-    std::thread::spawn(|| {
-        std::thread::sleep(std::time::Duration::from_secs(3));
-        std::process::exit(0);
-    });
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !stderr.trim().is_empty() {
+            return Err(format!("Quraşdırma xətası: {}", stderr));
+        }
+    }
+    std::process::exit(0);
     Ok(())
 }
 
