@@ -39,15 +39,11 @@ foreach ($l in $lines) {
 $doc = New-Object System.Drawing.Printing.PrintDocument
 $doc.OriginAtMargins = $false
 $doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(8, 10, 10, 10)
-$doc.Tag = $items
 $doc.add_PrintPage({
     param($sender, $e)
-    $all = $sender.Tag
     $brush = [System.Drawing.Brushes]::Black
-    $x = [Single]$e.MarginBounds.X
     $y = [Single]$e.MarginBounds.Y
-    $right = [Single]($e.MarginBounds.X + $e.MarginBounds.Width)
-    foreach ($it in $all) {
+    foreach ($it in $items) {
         $style = [System.Drawing.FontStyle]::Bold
         $font = New-Object System.Drawing.Font("Courier New", [float]$it.Size, $style)
         $w = $e.Graphics.MeasureString($it.Text, $font).Width
