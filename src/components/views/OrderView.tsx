@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
-import { fmtMoney, fmtDateTime } from "../../lib/utils";
+import { fmtMoney } from "../../lib/utils";
 import { printHtml } from "../../lib/print";
+import { buildReceiptHtml } from "../../lib/receiptHtml";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import Modal from "../ui/Modal";
 import Receipt, { type ReceiptData } from "../ui/Receipt";
@@ -130,41 +131,7 @@ export default function OrderView() {
   function printReceipt() {
     if (!receiptData) return;
     setData(prev => ({ ...prev, nextReceiptNo: (prev.nextReceiptNo || 1) + 1 }));
-    const d = receiptData;
-    const { date, time } = fmtDateTime(d.timestamp);
-    const W = "=".repeat(32);
-    const D = "-".repeat(32);
-    const items = d.items.map((li: any) => {
-      const name = li.name.length > 20 ? li.name.slice(0, 20) + ".." : li.name;
-      const line = li.qty + " x " + fmtMoney(li.price, "");
-      const total = fmtMoney(li.price * li.qty, "");
-      const pad = 32 - line.length - total.length;
-      return name + "\n" + line + " ".repeat(Math.max(1, pad)) + total;
-    }).join("\n");
-    const qtyTotal = d.items.reduce((s: number, li: any) => s + li.qty, 0);
-    const label = "Məhsul sayı";
-    const qtyLine = qtyTotal + " ədəd";
-    const p1 = 32 - label.length - qtyLine.length;
-    const totalPad = 32 - "CƏMİ".length - fmtMoney(d.total, "").length;
-    const paidStr = d.paid ? "\n" + D + "\nÖdəniş: " + (d.paymentMethod === "cash" ? "Nağd" : "Kart") + "\nÖDƏNİLDİ" : "";
-    const html = `<pre style="font-family:'Courier New',monospace;font-size:12px;width:270px;margin:0 auto;padding:16px 12px;line-height:1.5;white-space:pre-wrap">
-<b>${d.restaurantName}</b>
-
-${W}
-Tarix:             ${date}
-Saat:              ${time}
-${d.isTakeaway ? "Sifariş" : "Masa"}:           ${d.tableName}
-Çek №:             #${String(d.receiptNo).padStart(5, "0")}
-Kassir:            ${d.cashier}
-${D}
-${items}
-${D}
-${label}${" ".repeat(Math.max(1, p1))}${qtyLine}
-<b>CƏMİ</b>${" ".repeat(Math.max(1, totalPad))}<b>${fmtMoney(d.total, d.currency)}</b>${paidStr}
-${W}
-
-Nuş olsun! Yenidən gözləyirik</pre>`;
-    printHtml(html);
+    printHtml(buildReceiptHtml(receiptData));
     setReceiptModal(false);
   }
 

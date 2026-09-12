@@ -1,6 +1,8 @@
 import { useApp } from "../../context/AppContext";
-import { fmtMoney, fmtDateTime } from "../../lib/utils";
+import { fmtMoney } from "../../lib/utils";
 import { printHtml } from "../../lib/print";
+import { buildReceiptHtml } from "../../lib/receiptHtml";
+import type { ReceiptData } from "../ui/Receipt";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import type { OnlineOrderStatus } from "../../types";
 
@@ -13,38 +15,20 @@ const STATUS_CONFIG: Record<OnlineOrderStatus, { label: string; color: string; b
 };
 
 function printOnlineReceipt(order: any, data: any) {
-  const { date, time } = fmtDateTime(order.createdAt);
-  const W = "=".repeat(32);
-  const D = "-".repeat(32);
-  const items = order.items.map((li: any) => {
-    const name = li.name.length > 20 ? li.name.slice(0, 20) + ".." : li.name;
-    const line = li.qty + " x " + fmtMoney(li.price, "");
-    const total = fmtMoney(li.price * li.qty, "");
-    const pad = 32 - line.length - total.length;
-    return name + "\n" + line + " ".repeat(Math.max(1, pad)) + total;
-  }).join("\n");
-  const qtyTotal = order.items.reduce((s: number, li: any) => s + li.qty, 0);
-  const label = "Məhsul sayı";
-  const qtyLine = qtyTotal + " ədəd";
-  const p1 = 32 - label.length - qtyLine.length;
-  const totalPad = 32 - "CƏMİ".length - fmtMoney(order.total, "").length;
-  const html = `<pre style="font-family:'Courier New',monospace;font-size:12px;width:270px;margin:0 auto;padding:16px 12px;line-height:1.5;white-space:pre-wrap">
-<b>${data.settings.name}</b>
-
-${W}
-Tarix:             ${date}
-Saat:              ${time}
-Müştəri:           ${order.customerName}
-Sifariş:           #${order.orderNo}
-${D}
-${items}
-${D}
-${label}${" ".repeat(Math.max(1, p1))}${qtyLine}
-<b>CƏMİ</b>${" ".repeat(Math.max(1, totalPad))}<b>${fmtMoney(order.total, data.settings.currency)}</b>
-${W}
-
-Nuş olsun! Yenidən gözləyirik</pre>`;
-  printHtml(html);
+  const d: ReceiptData = {
+    restaurantName: data.settings.name,
+    tableName: order.table ? `Masa ${order.table}` : `#${order.orderNo}`,
+    items: order.items,
+    total: order.total,
+    receiptNo: order.orderNo,
+    cashier: order.customerName || "-",
+    paid: order.status === "completed",
+    paymentMethod: null,
+    timestamp: order.createdAt,
+    isTakeaway: true,
+    currency: data.settings.currency,
+  };
+  printHtml(buildReceiptHtml(d));
 }
 
 function whatsAppMessage(status: string, orderNo: number): string {

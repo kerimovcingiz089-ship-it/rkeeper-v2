@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useApp } from "../../context/AppContext";
 import { LANGUAGES } from "../../lib/translations";
 
-const CURRENT_VERSION = "2.2.4";
+const CURRENT_VERSION = "2.2.5";
 const GITHUB_REPO = "kerimovcingiz089-ship-it/rkeeper-v2";
 
 interface ReleaseInfo {
