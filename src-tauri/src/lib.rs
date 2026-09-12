@@ -9,116 +9,70 @@ fn print_receipt(html: String) -> Result<(), String> {
     let script = r#"
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.Drawing
-Add-Type -AssemblyName System.Windows.Forms
 
 $html = Get-Content (Join-Path $env:TEMP "rkeeper_receipt.html") -Raw -Encoding UTF8
-
-function Print-TextFallback {
+$html = $html -replace '<br\s*/?>', "`n"
+$html = $html -replace '><', '> <'
+$raw = $html
+if ($html -match '(?s)<pre id="rectext"[^>]*>(.*?)</pre>') {
+    $text = [System.Net.WebUtility]::HtmlDecode($Matches[1])
+} else {
     $text = [regex]::Replace($html, '<[^>]+>', '')
-    $text = [System.Net.WebUtility]::HtmlDecode($text).Trim() -replace ([char]0x2713).ToString(), ''
-    $lines = @($text -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
-    $doc = New-Object System.Drawing.Printing.PrintDocument
-    $doc.add_PrintPage({
-        param($sender, $e)
-        $y = [Single]$e.MarginBounds.Y
-        foreach ($line in $lines) {
-            $font = New-Object System.Drawing.Font("Courier New", 11, [System.Drawing.FontStyle]::Bold)
-            $e.Graphics.DrawString($line, $font, [System.Drawing.Brushes]::Black, [Single]$e.MarginBounds.X, $y)
-            $y += [float]$font.GetHeight($e.Graphics) * 1.3
+}
+$text = [System.Net.WebUtility]::HtmlDecode($text).Trim()
+$text = $text -replace ([char]0x2713).ToString(), ''
+$lines = @($text -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
+
+$items = New-Object System.Collections.Generic.List[object]
+$idx = 0
+foreach ($l in $lines) {
+    $size = 11.0
+    $bold = $true
+    $center = $false
+    if ($idx -eq 0) {
+        $size = 13.0; $center = $true
+    } elseif ($l -match 'ÖDƏNİŞ QƏBZİ|SİFARİŞ ÇEKİ') {
+        $center = $true
+    } elseif ($l -eq 'Nuş olsun!' -or $l -eq 'Yenidən gözləyirik' -or $l -eq 'ÖDƏNİLİB') {
+        $center = $true
+    } elseif ($l -match '^CƏMİ') {
+        $size = 12.5
+    }
+    $items.Add([pscustomobject]@{ Text = $l; Size = $size; Bold = $bold; Center = $center })
+    $idx++
+}
+
+if ($items.Count -eq 0) { throw "Çek mətni boşdur" }
+
+$script:lineIndex = 0
+$doc = New-Object System.Drawing.Printing.PrintDocument
+$doc.OriginAtMargins = $false
+$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(8, 10, 10, 10)
+$doc.add_PrintPage({
+    param($sender, $e)
+    $brush = [System.Drawing.Brushes]::Black
+    $y = [Single]$e.MarginBounds.Y
+    $bottom = [Single]($e.MarginBounds.Bottom)
+    while ($script:lineIndex -lt $items.Count -and $y -le $bottom) {
+        $it = $items[$script:lineIndex]
+        $style = [System.Drawing.FontStyle]::Bold
+        $font = New-Object System.Drawing.Font("Courier New", [float]$it.Size, $style)
+        $w = $e.Graphics.MeasureString($it.Text, $font).Width
+        if ($it.Center) {
+            $x = [Single]($e.MarginBounds.X + (($e.MarginBounds.Width - $w) / 2))
+        } else {
+            $x = [Single]$e.MarginBounds.X
         }
-    })
-    $doc.Print()
-}
-
-function Print-Image {
-    $full = "<!DOCTYPE html><html><head><meta charset=""utf-8""><style>html,body{margin:0;padding:0}</style></head><body style=""margin:0;padding:0"">" + $html + "</body></html>"
-
-    $wb = New-Object System.Windows.Forms.WebBrowser
-    $wb.ScrollBarsEnabled = $false
-    $wb.ScriptErrorsSuppressed = $true
-    $wb.Width = 500
-    $wb.Height = 1000
-    $null = $wb.Handle
-    $wb.DocumentText = $full
-
-    $t = 0
-    while (($wb.Document -eq $null -or $wb.Document.Body -eq $null -or $wb.ReadyState -ne "Complete") -and $t -lt 400) {
-        [System.Windows.Forms.Application]::DoEvents()
-        Start-Sleep -Milliseconds 25
-        $t++
+        $e.Graphics.DrawString($it.Text, $font, $brush, $x, $y)
+        $y += [Single]($font.GetHeight($e.Graphics) * 1.4)
+        $script:lineIndex++
     }
-
-    $target = $null
-    foreach ($e in $wb.Document.All) {
-        $cn = $e.GetAttribute("className")
-        if ($cn -and $cn.ToString().Contains("w-[280px]")) { $target = $e; break }
-    }
-    if ($target) {
-        $elLeft = [int]$target.GetAttribute("offsetLeft")
-        $elTop  = [int]$target.GetAttribute("offsetTop")
-        $elW    = [int]$target.GetAttribute("offsetWidth")
-        $elH    = [int]$target.GetAttribute("offsetHeight")
-    } else {
-        $body = $wb.Document.Body.ScrollRectangle
-        $elLeft = 0; $elTop = 0; $elW = $body.Width; $elH = $body.Height
-    }
-
-    $fullW = [int]$wb.Document.Body.ScrollRectangle.Width
-    $fullH = [int]$wb.Document.Body.ScrollRectangle.Height
-    if ($fullW -lt $elLeft + $elW) { $fullW = $elLeft + $elW }
-    if ($fullH -lt $elTop + $elH) { $fullH = $elTop + $elH }
-
-    $fullBmp = New-Object System.Drawing.Bitmap($fullW, $fullH)
-    $fullBmp.SetResolution(96, 96)
-    $wb.DrawToBitmap($fullBmp, (New-Object System.Drawing.Rectangle(0, 0, $fullW, $fullH)))
-
-    $bmp = New-Object System.Drawing.Bitmap($elW, $elH)
-    $bmp.SetResolution(96, 96)
-    $g = [System.Drawing.Graphics]::FromImage($bmp)
-    $g.Clear([System.Drawing.Color]::White)
-    $g.DrawImage($fullBmp,
-        (New-Object System.Drawing.Rectangle(0, 0, $elW, $elH)),
-        (New-Object System.Drawing.Rectangle($elLeft, $elTop, $elW, $elH)),
-        [System.Drawing.GraphicsUnit]::Pixel)
-    $g.Dispose()
-    $fullBmp.Dispose()
-
-    $doc = New-Object System.Drawing.Printing.PrintDocument
-    $doc.OriginAtMargins = $false
-    $doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(5, 5, 5, 5)
-    $doc.add_PrintPage({
-        param($sender, $e)
-        $iw = $bmp.Width
-        $ih = $bmp.Height
-        $pw = $iw * (100.0 / 96.0)
-        $ph = $ih * (100.0 / 96.0)
-        $maxW = [Single]$e.MarginBounds.Width
-        $maxH = [Single]$e.MarginBounds.Height
-        $scaleX = $maxW / $pw
-        $scaleY = $maxH / $ph
-        $scale = [Math]::Min($scaleX, $scaleY)
-        if ($scale -gt 1) { $scale = 1 }
-        $dw = [int]($pw * $scale)
-        $dh = [int]($ph * $scale)
-        $dx = [int]($e.MarginBounds.X + (($maxW - $dw) / 2))
-        $dy = [int]($e.MarginBounds.Y + (($maxH - $dh) / 2))
-        $dest = New-Object System.Drawing.Rectangle($dx, $dy, $dw, $dh)
-        $e.Graphics.DrawImage($bmp, $dest)
-    })
-    $doc.Print()
-}
-
+    $e.HasMorePages = ($script:lineIndex -lt $items.Count)
+})
 try {
-    Print-Image
-    Write-Output "PRINT_OK"
-} catch {
-    try {
-        Print-TextFallback
-        Write-Output "PRINT_FALLBACK_OK"
-    } catch {
-        Write-Error "Print error: $($_.Exception.Message)"
-        exit 1
-    }
+    $doc.Print()
+} finally {
+    if ($doc) { $doc.Dispose() }
 }
 "#;
 

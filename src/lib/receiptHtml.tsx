@@ -1,62 +1,122 @@
-import { flushSync } from "react-dom";
-import { createRoot } from "react-dom/client";
-import Receipt, { type ReceiptData } from "../components/ui/Receipt";
+import type { ReceiptData } from "../components/ui/Receipt";
+import { fmtMoney, fmtDateTime } from "./utils";
 
-const RECEIPT_CSS = `
-.w-\[280px\]{width:280px}
-.bg-white{background:#fff}
-.text-\[#1A1A1A\]{color:#1a1a1a}
-.font-mono{font-family:'Courier New',monospace}
-.text-\[12\.5px\]{font-size:12.5px}
-.leading-snug{line-height:1.375}
-.p-5{padding:20px}
-.mx-auto{margin:0 auto}
-.text-center{text-align:center}
-.font-extrabold{font-weight:800}
-.text-\[15px\]{font-size:15px}
-.uppercase{text-transform:uppercase}
-.tracking-wide{letter-spacing:1px}
-.text-\[10\.5px\]{font-size:10.5px}
-.tracking-\[2\.5px\]{letter-spacing:2.5px}
-.text-gray-500{color:#6b7280}
-.mt-1{margin-top:4px}
-.mb-3{margin-bottom:12px}
-.border-t{border-top:1px solid #9ca3af}
-.border-dashed{border-style:dashed}
-.border-gray-400{border-color:#9ca3af}
-.my-2{margin:8px 0}
+function esc(s: string): string {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function row(label: string, value: string): string {
+  return `<div class="flex justify-between py-0-5"><span class="c-gray c-gray-500">${label}</span><span class="bold">${value}</span></div>`;
+}
+
+function sep(): string {
+  return `<div class="sep"></div>`;
+}
+
+/**
+ * Receipt HTML-i yalnizca string birlestirerek qurur. React/DOM istifade etmir,
+ * buna gore WebView-da hec vaxt crash etmez.
+ */
+export function buildReceiptHtml(data: ReceiptData): string {
+  const { date, time } = fmtDateTime(data.timestamp);
+  const itemCount = data.items.reduce((s, li) => s + li.qty, 0);
+
+  let body = `<div class="r">
+  <div class="h1">${esc(data.restaurantName)}</div>
+  <div class="h2">${data.paid ? "ÖDƏNİŞ QƏBZİ" : "SİFARİŞ ÇEKİ"}</div>
+  ${sep()}
+  ${row("Tarix", esc(date))}
+  ${row("Saat", esc(time))}
+  ${row(data.isTakeaway ? "Sifariş" : "Masa", esc(data.tableName))}
+  ${row("Çek №", esc("#" + String(data.receiptNo).padStart(5, "0")))}
+  ${row("Kassir", esc(data.cashier))}
+  ${sep()}`;
+
+  if (data.items.length > 0) {
+    for (const li of data.items) {
+      body += `
+  <div class="it">
+    <div class="bold">${esc(li.name)}</div>
+    <div class="flex justify-between c-gray-600"><span>${li.qty} × ${esc(fmtMoney(li.price, data.currency))}</span><span>${esc(fmtMoney(li.price * li.qty, data.currency))}</span></div>
+  </div>`;
+    }
+  } else {
+    body += `\n  <div class="empty">Məhsul yoxdur</div>`;
+  }
+
+  body += `
+  ${sep()}
+  ${row("Məhsul sayı", `${itemCount} ədəd`)}
+  <div class="flex justify-between total"><span>CƏMİ</span><span>${esc(fmtMoney(data.total, data.currency))}</span></div>`;
+
+  if (data.paid) {
+    body += `\n  <div class="flex justify-between py-0-5"><span class="c-gray-500">Ödəniş növü</span><span class="bold">${data.paymentMethod === "cash" ? "Nağd" : "Kart"}</span></div>`;
+    body += `\n  <div class="paid">ÖDƏNİLİB ✓</div>`;
+  } else {
+    body += `\n  <div class="notpaid">Ödəniş hələ qəbul olunmayıb</div>`;
+  }
+
+  body += `
+  ${sep()}
+  <div class="foot">Nuş olsun!<br/>Yenidən gözləyirik</div>
+</div>`;
+
+  let textLines: string[] = [];
+  textLines.push(data.restaurantName);
+  textLines.push(data.paid ? "ÖDƏNİŞ QƏBZİ" : "SİFARİŞ ÇEKİ");
+  textLines.push("--------------------------------");
+  textLines.push(`Tarix    ${esc(date)}`);
+  textLines.push(`Saat     ${esc(time)}`);
+  textLines.push(`${data.isTakeaway ? "Sifariş" : "Masa"}    ${esc(data.tableName)}`);
+  textLines.push(`Çek №    ${esc("#" + String(data.receiptNo).padStart(5, "0"))}`);
+  textLines.push(`Kassir   ${esc(data.cashier)}`);
+  textLines.push("--------------------------------");
+  for (const li of data.items) {
+    textLines.push(esc(li.name));
+    textLines.push(`  ${li.qty} x ${esc(fmtMoney(li.price, data.currency))}   ${esc(fmtMoney(li.price * li.qty, data.currency))}`);
+  }
+  if (data.items.length === 0) textLines.push("Məhsul yoxdur");
+  textLines.push("--------------------------------");
+  textLines.push(`Məhsul sayı   ${itemCount} ədəd`);
+  textLines.push(`CƏMİ   ${esc(fmtMoney(data.total, data.currency))}`);
+  if (data.paid) {
+    textLines.push(`Ödəniş növü   ${data.paymentMethod === "cash" ? "Nağd" : "Kart"}`);
+    textLines.push("ÖDƏNİLİB");
+  } else {
+    textLines.push("Ödəniş hələ qəbul olunmayıb");
+  }
+  textLines.push("--------------------------------");
+  textLines.push("Nuş olsun!");
+  textLines.push("Yenidən gözləyirik");
+
+  const preText = textLines.join("\n");
+  const escPre = preText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&/g, "&amp;");
+
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff;font-family:'Courier New',monospace;font-size:12.5px;color:#1a1a1a}
+.r{width:280px;padding:12px;margin:0 auto}
+.h1{text-align:center;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:1px}
+.h2{text-align:center;font-size:10.5px;letter-spacing:2.5px;color:#6b7280;margin:4px 0 12px}
+.sep{border-top:1px dashed #9ca3af;margin:8px 0}
 .flex{display:flex}
 .justify-between{justify-content:space-between}
-.py-0\.5{padding:2px 0}
-.font-bold{font-weight:700}
-.mb-1\.5{margin-bottom:6px}
-.text-gray-600{color:#4b5563}
-.text-xs{font-size:12px}
-.text-base{font-size:16px}
-.py-1{padding:4px 0}
-.text-gray-400{color:#9ca3af}
-.italic{font-style:italic}
-.mt-2{margin-top:8px}
-.border-2{border:2px solid #16a34a}
-.border-green-600{border-color:#16a34a}
-.text-green-600{color:#16a34a}
-.tracking-widest{letter-spacing:2px}
-.rounded{border-radius:6px}
-.py-2{padding:8px 0}
-.mt-3{margin-top:12px}
-.-rotate-1{transform:rotate(-1deg)}
-`;
-
-export function buildReceiptHtml(data: ReceiptData): string {
-  const host = document.createElement("div");
-  host.style.display = "none";
-  document.body.appendChild(host);
-  const root = createRoot(host);
-  flushSync(() => {
-    root.render(<Receipt data={data} />);
-  });
-  const markup = host.innerHTML;
-  root.unmount();
-  host.remove();
-  return `<style>${RECEIPT_CSS}</style>${markup}`;
+.py-0-5{padding:2px 0}
+.bold{font-weight:700}
+.c-gray{color:#6b7280}
+.c-gray-500{color:#6b7280}
+.c-gray-600{color:#4b5563}
+.it{margin-bottom:6px}
+.empty{text-align:center;color:#9ca3af;font-size:12px}
+.total{font-weight:800;font-size:16px;padding:4px 0}
+.paid{text-align:center;border:2px solid #16a34a;color:#16a34a;font-weight:800;font-size:12px;letter-spacing:2px;border-radius:6px;padding:8px 0;margin-top:12px;transform:rotate(-1deg)}
+.notpaid{text-align:center;font-size:12px;color:#9ca3af;font-style:italic;margin-top:8px}
+.foot{text-align:center;font-size:12px;color:#6b7280;margin-top:8px}
+</style></head><body>${body.replace(/\n\s*/g, "\n")}
+<pre id="rectext" style="display:none">${escPre}</pre>
+</body></html>`;
 }

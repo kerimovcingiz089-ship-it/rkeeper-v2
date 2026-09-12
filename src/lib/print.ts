@@ -11,17 +11,22 @@ async function getInvoke() {
   }
 }
 
+export function isTauri(): boolean {
+  return !!(window as unknown as { __TAURI_INTERNALS__?: unknown }).__TAURI_INTERNALS__;
+}
+
 export async function printHtml(html: string): Promise<void> {
   const invoke = await getInvoke();
   if (invoke) {
     await invoke("print_receipt", { html });
-  } else {
-    const w = window.open("", "_blank", "width=380,height=600");
-    if (w) {
-      w.document.write(html);
-      w.document.close();
-      w.focus();
-      setTimeout(() => w.print(), 300);
-    }
+    return;
   }
+  const w = window.open("", "_blank", "width=380,height=600");
+  if (!w) throw new Error("Yeni pəncərə açıla bilmədi");
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  w.focus();
+  await new Promise((r) => setTimeout(r, 400));
+  w.print();
 }
