@@ -8,27 +8,56 @@ fn print_receipt(html: String) -> Result<(), String> {
 
     let script = r#"
 Add-Type -AssemblyName System.Drawing
-Add-Type -AssemblyName System.Drawing.Printing
 
 $html = Get-Content (Join-Path $env:TEMP "rkeeper_receipt.html") -Raw -Encoding UTF8
+$html = $html -replace '<br\s*/?>', "`n"
+$html = $html -replace '><', '> <'
 $text = [regex]::Replace($html, '<[^>]+>', '')
 $text = [System.Net.WebUtility]::HtmlDecode($text).Trim()
 $text = $text -replace '✓', ''
-$lines = $text -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
+$lines = @($text -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" })
+
+$items = New-Object System.Collections.Generic.List[object]
+$idx = 0
+foreach ($l in $lines) {
+    $size = 11.0
+    $bold = $true
+    $center = $false
+    if ($idx -eq 0) {
+        $size = 13.0; $center = $true
+    } elseif ($l -match 'ÖDƏNİŞ QƏBZİ|SİFARİŞ ÇEKİ') {
+        $center = $true
+    } elseif ($l -eq 'Nuş olsun!' -or $l -eq 'Yenidən gözləyirik' -or $l -eq 'ÖDƏNİLİB') {
+        $center = $true
+    } elseif ($l -match '^CƏMİ') {
+        $size = 12.5
+    }
+    $items.Add([pscustomobject]@{ Text = $l; Size = $size; Bold = $bold; Center = $center })
+    $idx++
+}
 
 $doc = New-Object System.Drawing.Printing.PrintDocument
 $doc.OriginAtMargins = $false
 $doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(8, 10, 10, 10)
+$doc.Tag = $items
 $doc.add_PrintPage({
     param($sender, $e)
-    $font = New-Object System.Drawing.Font("Courier New", 14)
+    $all = $sender.Tag
     $brush = [System.Drawing.Brushes]::Black
     $x = [Single]$e.MarginBounds.X
     $y = [Single]$e.MarginBounds.Y
-    $lineH = [Single]($font.GetHeight($e.Graphics) * 1.35)
-    foreach ($line in $lines) {
-        $e.Graphics.DrawString($line, $font, $brush, $x, $y)
-        $y += $lineH
+    $right = [Single]($e.MarginBounds.X + $e.MarginBounds.Width)
+    foreach ($it in $all) {
+        $style = [System.Drawing.FontStyle]::Bold
+        $font = New-Object System.Drawing.Font("Courier New", [float]$it.Size, $style)
+        $w = $e.Graphics.MeasureString($it.Text, $font).Width
+        if ($it.Center) {
+            $x = [Single]($e.MarginBounds.X + (($e.MarginBounds.Width - $w) / 2))
+        } else {
+            $x = [Single]$e.MarginBounds.X
+        }
+        $e.Graphics.DrawString($it.Text, $font, $brush, $x, $y)
+        $y += [Single]($font.GetHeight($e.Graphics) * 1.4)
     }
 })
 $doc.Print()
