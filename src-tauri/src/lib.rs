@@ -15,6 +15,8 @@ $text = [regex]::Replace($html, '<[^>]+>', '')
 $text = [System.Net.WebUtility]::HtmlDecode($text).Trim()
 
 $doc = New-Object System.Drawing.Printing.PrintDocument
+$doc.OriginAtMargins = $false
+$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(20, 15, 10, 10)
 $doc.add_PrintPage({
     param($sender, $e)
     $font = New-Object System.Drawing.Font("Courier New", 11)
