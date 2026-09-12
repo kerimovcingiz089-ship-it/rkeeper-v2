@@ -112,7 +112,15 @@ export default function TakeawayView() {
 
   function printReceipt() {
     if (!receiptData) return;
-    printHtml(buildReceiptHtml(receiptData));
+    try {
+      printHtml(buildReceiptHtml(receiptData)).catch((e) => {
+        console.error(e);
+        toast("Çap xətası: " + (e?.message || String(e)));
+      });
+    } catch (e) {
+      console.error(e);
+      toast("Çap xətası bilinməyən");
+    }
     setReceiptModal(false);
   }
 

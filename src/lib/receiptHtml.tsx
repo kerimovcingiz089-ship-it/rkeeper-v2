@@ -1,4 +1,5 @@
-import { renderToStaticMarkup } from "react-dom/server";
+import { flushSync } from "react-dom";
+import { createRoot } from "react-dom/client";
 import Receipt, { type ReceiptData } from "../components/ui/Receipt";
 
 const RECEIPT_CSS = `
@@ -47,6 +48,15 @@ const RECEIPT_CSS = `
 `;
 
 export function buildReceiptHtml(data: ReceiptData): string {
-  const markup = renderToStaticMarkup(<Receipt data={data} />);
+  const host = document.createElement("div");
+  host.style.display = "none";
+  document.body.appendChild(host);
+  const root = createRoot(host);
+  flushSync(() => {
+    root.render(<Receipt data={data} />);
+  });
+  const markup = host.innerHTML;
+  root.unmount();
+  host.remove();
   return `<style>${RECEIPT_CSS}</style>${markup}`;
 }

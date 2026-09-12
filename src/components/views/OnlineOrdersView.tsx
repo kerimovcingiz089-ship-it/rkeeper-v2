@@ -14,7 +14,7 @@ const STATUS_CONFIG: Record<OnlineOrderStatus, { label: string; color: string; b
   cancelled:  { label: "Ləğv edildi", color: "#999",   bg: "rgba(150,150,150,.1)" },
 };
 
-function printOnlineReceipt(order: any, data: any) {
+function printOnlineReceipt(order: any, data: any, onErr: (m: string) => void) {
   const d: ReceiptData = {
     restaurantName: data.settings.name,
     tableName: order.table ? `Masa ${order.table}` : `#${order.orderNo}`,
@@ -28,7 +28,15 @@ function printOnlineReceipt(order: any, data: any) {
     isTakeaway: true,
     currency: data.settings.currency,
   };
-  printHtml(buildReceiptHtml(d));
+  try {
+    printHtml(buildReceiptHtml(d)).catch((e) => {
+      console.error(e);
+      onErr("Çap xətası: " + (e?.message || String(e)));
+    });
+  } catch (e) {
+    console.error(e);
+    onErr("Çap xətası bilinməyən");
+  }
 }
 
 function whatsAppMessage(status: string, orderNo: number): string {
@@ -246,7 +254,7 @@ export default function OnlineOrdersView() {
                                   style={{ background: "#FABB18" }}>
                                   Təhvil verildi
                                 </button>
-                                <button onClick={() => printOnlineReceipt(order, data)}
+                                <button onClick={() => printOnlineReceipt(order, data, (m) => toast(m))}
                                   className="px-3 py-1.5 rounded-lg text-[11px] font-bold text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition cursor-pointer">
                                   🖨 Çek
                                 </button>

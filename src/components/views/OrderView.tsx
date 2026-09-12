@@ -131,7 +131,15 @@ export default function OrderView() {
   function printReceipt() {
     if (!receiptData) return;
     setData(prev => ({ ...prev, nextReceiptNo: (prev.nextReceiptNo || 1) + 1 }));
-    printHtml(buildReceiptHtml(receiptData));
+    try {
+      printHtml(buildReceiptHtml(receiptData)).catch((e) => {
+        console.error(e);
+        toast("Çap xətası: " + (e?.message || String(e)));
+      });
+    } catch (e) {
+      console.error(e);
+      toast("Çap xətası bilinməyən");
+    }
     setReceiptModal(false);
   }
 
