@@ -13,16 +13,23 @@ Add-Type -AssemblyName System.Drawing.Printing
 $html = Get-Content (Join-Path $env:TEMP "rkeeper_receipt.html") -Raw -Encoding UTF8
 $text = [regex]::Replace($html, '<[^>]+>', '')
 $text = [System.Net.WebUtility]::HtmlDecode($text).Trim()
+$text = $text -replace '✓', ''
+$lines = $text -split "`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne "" }
 
 $doc = New-Object System.Drawing.Printing.PrintDocument
 $doc.OriginAtMargins = $false
-$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(20, 15, 10, 10)
+$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(8, 10, 10, 10)
 $doc.add_PrintPage({
     param($sender, $e)
-    $font = New-Object System.Drawing.Font("Courier New", 11)
+    $font = New-Object System.Drawing.Font("Courier New", 14)
     $brush = [System.Drawing.Brushes]::Black
-    $point = New-Object System.Drawing.PointF($e.MarginBounds.X, $e.MarginBounds.Y)
-    $e.Graphics.DrawString($text, $font, $brush, $point)
+    $x = [Single]$e.MarginBounds.X
+    $y = [Single]$e.MarginBounds.Y
+    $lineH = [Single]($font.GetHeight($e.Graphics) * 1.35)
+    foreach ($line in $lines) {
+        $e.Graphics.DrawString($line, $font, $brush, $x, $y)
+        $y += $lineH
+    }
 })
 $doc.Print()
 "#;
