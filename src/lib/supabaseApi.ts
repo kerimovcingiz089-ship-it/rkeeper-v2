@@ -62,6 +62,9 @@ export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
         categoryId: catId,
         stock: item.stock != null ? Number(item.stock) : 0,
         imageUrl: item.image_url || "",
+        isWeighted: !!item.is_weighted,
+        pluCode: item.plu_code != null ? Number(item.plu_code) : null,
+        barcode: item.barcode ? String(item.barcode) : null,
       };
     });
   } catch (err) {
@@ -70,18 +73,35 @@ export async function fetchProducts(data: AppData): Promise<MenuItem[] | null> {
   }
 }
 
-export async function addProduct(name: string, price: number, categoryId: string, imageUrl: string = ""): Promise<void> {
+export async function addProduct(name: string, price: number, categoryId: string, imageUrl: string = "", isWeighted?: boolean, pluCode?: number | null, barcode?: string | null): Promise<void> {
   try {
-    const { error } = await supabase.from("products").insert([{ name, price: Number(price), category: Number(categoryId), stock: 0, image_url: imageUrl }]);
+    const { error } = await supabase.from("products").insert([{
+      name,
+      price: Number(price),
+      category: Number(categoryId),
+      stock: 0,
+      image_url: imageUrl,
+      is_weighted: isWeighted || false,
+      plu_code: pluCode ?? null,
+      barcode: barcode || null,
+    }]);
     if (error) console.error("Supabase insert product:", error);
   } catch (err) {
     console.error("addProduct:", err);
   }
 }
 
-export async function updateProduct(id: string, name: string, price: number, categoryId: string, imageUrl: string = ""): Promise<void> {
+export async function updateProduct(id: string, name: string, price: number, categoryId: string, imageUrl: string = "", isWeighted?: boolean, pluCode?: number | null, barcode?: string | null): Promise<void> {
   try {
-    const { error } = await supabase.from("products").update({ name, price: Number(price), category: Number(categoryId), image_url: imageUrl }).eq("id", id);
+    const { error } = await supabase.from("products").update({
+      name,
+      price: Number(price),
+      category: Number(categoryId),
+      image_url: imageUrl,
+      is_weighted: isWeighted || false,
+      plu_code: pluCode ?? null,
+      barcode: barcode || null,
+    }).eq("id", id);
     if (error) console.error("Supabase update product:", error);
   } catch (err) {
     console.error("updateProduct:", err);

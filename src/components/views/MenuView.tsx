@@ -25,6 +25,9 @@ export default function MenuView() {
   const [itemImage, setItemImage] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [itemIsWeighted, setItemIsWeighted] = useState(false);
+  const [itemPlu, setItemPlu] = useState("");
+  const [itemBarcode, setItemBarcode] = useState("");
 
   if (!isAdmin) {
     return <div className="py-16 text-center text-gray-400 text-sm">Bu bölməyə giriş icazəniz yoxdur.</div>;
@@ -38,12 +41,16 @@ export default function MenuView() {
   }
   function openAddItem(catId: string) {
     setItemName(""); setItemPrice(""); setItemCatId(catId); setItemImage(""); setImageFile(null);
+    setItemIsWeighted(false); setItemPlu(""); setItemBarcode("");
     setModal({ type: "addItem", catId });
   }
   function openEditItem(id: string) {
     const item = data.items.find(i => i.id === id)!;
     setItemName(item.name); setItemPrice(String(item.price)); setItemCatId(item.categoryId);
     setItemImage(item.imageUrl || ""); setImageFile(null);
+    setItemIsWeighted(!!item.isWeighted);
+    setItemPlu(item.pluCode != null ? String(item.pluCode) : "");
+    setItemBarcode(item.barcode || "");
     setModal({ type: "editItem", id });
   }
 
@@ -77,6 +84,11 @@ export default function MenuView() {
   async function saveItem() {
     const price = parseFloat(itemPrice);
     if (!itemName.trim() || isNaN(price) || price < 0) { toast("Düzgün ad və qiymət daxil edin"); return; }
+    const plu = itemPlu.trim() ? parseInt(itemPlu, 10) : null;
+    if (itemIsWeighted && (plu == null || isNaN(plu))) { toast("Çəkili məhsul üçün PLU kodu vacibdir"); return; }
+    const barcode = itemBarcode.trim() ? itemBarcode.trim() : null;
+    if (itemIsWeighted && !barcode) { toast("Çəkili məhsul üçün barkod daxil edin"); return; }
+    if (plu != null && isNaN(plu)) { toast("Düzgün PLU kodu daxil edin"); return; }
     setUploading(true);
     let imageUrl = itemImage;
     if (imageFile) {
@@ -85,16 +97,16 @@ export default function MenuView() {
     }
     if (modal?.type === "addItem") {
       setModal(null);
-      const newItem = { id: uid("i"), name: itemName.trim(), price, categoryId: itemCatId, stock: 0, imageUrl };
+      const newItem = { id: uid("i"), name: itemName.trim(), price, categoryId: itemCatId, stock: 0, imageUrl, isWeighted: itemIsWeighted, pluCode: plu, barcode };
       setData(prev => ({ ...prev, items: [...prev.items, newItem] }));
-      await addProduct(itemName.trim(), price, itemCatId, imageUrl);
+      await addProduct(itemName.trim(), price, itemCatId, imageUrl, itemIsWeighted, plu, barcode);
       await refreshProducts();
       toast("Məhsul əlavə edildi");
     } else if (modal?.type === "editItem") {
       const id = (modal as any).id;
       setModal(null);
-      setData(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? { ...i, name: itemName.trim(), price, categoryId: itemCatId, imageUrl } : i) }));
-      await updateProduct(id, itemName.trim(), price, itemCatId, imageUrl);
+      setData(prev => ({ ...prev, items: prev.items.map(i => i.id === id ? { ...i, name: itemName.trim(), price, categoryId: itemCatId, imageUrl, isWeighted: itemIsWeighted, pluCode: plu, barcode } : i) }));
+      await updateProduct(id, itemName.trim(), price, itemCatId, imageUrl, itemIsWeighted, plu, barcode);
       await refreshProducts();
       toast("Məhsul yeniləndi");
     }
@@ -156,6 +168,14 @@ export default function MenuView() {
                         <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg">{getCatEmoji(cat.name)}</div>
                       )}
                       <span className="font-bold text-sm">{item.name}</span>
+                      {item.isWeighted && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-purple-50 text-purple-600">Çəkili</span>
+                      )}
+                      {(item.barcode || item.pluCode != null) && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-gray-50 text-gray-400 tabular-nums">
+                          {item.barcode ? "Barkod: " + item.barcode : ""}{!item.barcode && item.pluCode != null ? "PLU: " + item.pluCode : ""}
+                        </span>
+                      )}
                       <span className="text-sm text-gray-400">{fmtMoney(item.price, data.settings.currency)}</span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full
                         ${item.stock <= 0 ? "bg-red-50 text-red-400" : "bg-green-50 text-green-600"}`}>
@@ -228,6 +248,35 @@ export default function MenuView() {
           <input type="number" value={itemPrice} onChange={e => setItemPrice(e.target.value)}
             placeholder="0.00" min={0} step={0.01}
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+          <label className="flex items-center gap-2.5 mt-4 cursor-pointer select-none">
+            <input type="checkbox" checked={itemIsWeighted} onChange={e => setItemIsWeighted(e.target.checked)}
+              className="w-4 h-4 accent-[#FABB18]" />
+            <span className="text-sm font-bold">Çəkili məhsul (tərəzi barkodu ilə satılır)</span>
+          </label>
+          {itemIsWeighted && (
+            <>
+              <label className="block text-xs font-bold text-gray-400 mt-4 mb-1.5">PLU kodu</label>
+              <input type="number" value={itemPlu} onChange={e => setItemPlu(e.target.value)}
+                placeholder="Məs. 21" min={0} step={1}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+              <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">Barkod</label>
+              <input type="text" value={itemBarcode} onChange={e => setItemBarcode(e.target.value)}
+                placeholder="Məs. 2200021030200"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+            </>
+          )}
+          {!itemIsWeighted && (
+            <>
+              <label className="block text-xs font-bold text-gray-400 mt-4 mb-1.5">Barkod (istəyə bağlı)</label>
+              <input type="text" value={itemBarcode} onChange={e => setItemBarcode(e.target.value)}
+                placeholder="Standart barkod kodu"
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+              <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">PLU kodu (istəyə bağlı)</label>
+              <input type="number" value={itemPlu} onChange={e => setItemPlu(e.target.value)}
+                placeholder="Rəqəmsal PLU kodu" min={0} step={1}
+                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+            </>
+          )}
           {modal.type === "editItem" && (
             <>
               <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">Kateqoriya</label>

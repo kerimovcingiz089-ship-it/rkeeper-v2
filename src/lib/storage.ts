@@ -36,6 +36,7 @@ export function defaultData(): AppData {
       { id: "i15", name: "Limonad",                  price: 4,   categoryId: "c5", stock: 40 },
       { id: "i16", name: "Milkşeyk",                 price: 6,   categoryId: "c5", stock: 25 },
       { id: "i17", name: "Təzə Sıxılmış Şirə",      price: 5,   categoryId: "c5", stock: 30 },
+      { id: "i18", name: "Şirniyyat Assorti",        price: 25,  categoryId: "c2", stock: 5, isWeighted: true, pluCode: 21, barcode: "2200021030200" },
     ],
     orders: {},
     history: [],

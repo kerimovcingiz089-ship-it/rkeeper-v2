@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney } from "../../lib/utils";
 import { printHtml } from "../../lib/print";
 import { buildReceiptHtml } from "../../lib/receiptHtml";
 import { getCatEmoji } from "../../lib/categoryIcons";
+import { useBarcodeScan } from "../../lib/useBarcodeScan";
+import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
 import Modal from "../ui/Modal";
 import Receipt, { type ReceiptData } from "../ui/Receipt";
 
@@ -32,7 +34,7 @@ export default function OrderView() {
     return sum + (item ? item.price * li.qty : 0);
   }, 0);
 
-  function addItem(itemId: string) {
+  function addItem(itemId: string, qty: number = 1) {
     const item = data.items.find(i => i.id === itemId);
     // 🟡 Stok=0 bloku
     if (item && item.stock <= 0) {
@@ -43,8 +45,8 @@ export default function OrderView() {
       const ord = prev.orders[activeTableId!] || { items: [] };
       const line = ord.items.find(li => li.itemId === itemId);
       const newItems = line
-        ? ord.items.map(li => li.itemId === itemId ? { ...li, qty: li.qty + 1 } : li)
-        : [...ord.items, { itemId, qty: 1 }];
+        ? ord.items.map(li => li.itemId === itemId ? { ...li, qty: +((li.qty + qty).toFixed(3)) } : li)
+        : [...ord.items, { itemId, qty }];
       return {
         ...prev,
         tables: prev.tables.map(t => t.id === activeTableId && t.status === "free" ? { ...t, status: "open" } : t),
@@ -52,6 +54,27 @@ export default function OrderView() {
       };
     });
   }
+
+  const handleBarcodeScan = useCallback((code: string) => {
+    if (!activeTableId) return;
+    const trimmed = code.trim();
+    if (isWeightedBarcode(trimmed)) {
+      const parsed = parseWeightedBarcode(trimmed)!;
+      const item = findItemByBarcode(data.items, trimmed);
+      if (!item) { toast("Barkod üzrə məhsul tapılmadı (PLU: " + parsed.plu + ")"); return; }
+      if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
+      addItem(item.id, parsed.weightKg);
+      toast("✔ " + item.name + " — " + parsed.weightKg.toFixed(3) + " kq");
+      return;
+    }
+    const item = findItemByBarcode(data.items, trimmed);
+    if (item) {
+      if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
+      addItem(item.id, 1);
+    }
+  }, [activeTableId, data.items, toast]);
+
+  useBarcodeScan(handleBarcodeScan);
 
   function changeQty(itemId: string, delta: number) {
     setData(prev => {

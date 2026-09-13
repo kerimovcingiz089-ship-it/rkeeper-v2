@@ -21,6 +21,9 @@ export interface MenuItem {
   categoryId: string;
   stock: number;
   imageUrl?: string;
+  isWeighted?: boolean;
+  pluCode?: number | null;
+  barcode?: string | null;
 }
 
 export interface OrderLine {

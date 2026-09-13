@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney, fmtTime, uid } from "../../lib/utils";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import { printHtml } from "../../lib/print";
 import { buildReceiptHtml } from "../../lib/receiptHtml";
+import { useBarcodeScan } from "../../lib/useBarcodeScan";
+import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
 import Modal from "../ui/Modal";
 import Receipt, { type ReceiptData } from "../ui/Receipt";
 
@@ -29,13 +31,33 @@ export default function TakeawayView() {
     return s + (item ? item.price * li.qty : 0);
   }, 0);
 
-  function addToCart(itemId: string) {
+  function addToCart(itemId: string, qty: number = 1) {
     const item = data.items.find(i => i.id === itemId);
     if (item && item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
     const line = takeawayCart.find(li => li.itemId === itemId);
-    if (line) setTakeawayCart(takeawayCart.map(li => li.itemId === itemId ? { ...li, qty: li.qty + 1 } : li));
-    else setTakeawayCart([...takeawayCart, { itemId, qty: 1 }]);
+    if (line) setTakeawayCart(takeawayCart.map(li => li.itemId === itemId ? { ...li, qty: +((li.qty + qty).toFixed(3)) } : li));
+    else setTakeawayCart([...takeawayCart, { itemId, qty }]);
   }
+
+  const handleBarcodeScan = useCallback((code: string) => {
+    const trimmed = code.trim();
+    if (isWeightedBarcode(trimmed)) {
+      const parsed = parseWeightedBarcode(trimmed)!;
+      const item = findItemByBarcode(data.items, trimmed);
+      if (!item) { toast("Barkod üzrə məhsul tapılmadı (PLU: " + parsed.plu + ")"); return; }
+      if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
+      addToCart(item.id, parsed.weightKg);
+      toast("✔ " + item.name + " — " + parsed.weightKg.toFixed(3) + " kq");
+      return;
+    }
+    const item = findItemByBarcode(data.items, trimmed);
+    if (item) {
+      if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
+      addToCart(item.id, 1);
+    }
+  }, [data.items, takeawayCart, toast]);
+
+  useBarcodeScan(handleBarcodeScan);
 
   function changeQty(itemId: string, delta: number) {
     const updated = takeawayCart
