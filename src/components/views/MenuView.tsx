@@ -87,7 +87,6 @@ export default function MenuView() {
     const plu = itemPlu.trim() ? parseInt(itemPlu, 10) : null;
     if (itemIsWeighted && (plu == null || isNaN(plu))) { toast("Çəkili məhsul üçün PLU kodu vacibdir"); return; }
     const barcode = itemBarcode.trim() ? itemBarcode.trim() : null;
-    if (itemIsWeighted && !barcode) { toast("Çəkili məhsul üçün barkod daxil edin"); return; }
     if (plu != null && isNaN(plu)) { toast("Düzgün PLU kodu daxil edin"); return; }
     setUploading(true);
     let imageUrl = itemImage;
@@ -259,10 +258,7 @@ export default function MenuView() {
               <input type="number" value={itemPlu} onChange={e => setItemPlu(e.target.value)}
                 placeholder="Məs. 21" min={0} step={1}
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
-              <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">Barkod</label>
-              <input type="text" value={itemBarcode} onChange={e => setItemBarcode(e.target.value)}
-                placeholder="Məs. 2200021030200"
-                className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+              <p className="text-xs text-gray-400 mt-1.5">Ədəd/1kq qiyməti daxil edin — sağdakı orta köşə tərəzi ilə eyni PLU olmalıdır.</p>
             </>
           )}
           {!itemIsWeighted && (

@@ -23,6 +23,7 @@ export default function TakeawayView() {
   const [receiptModal, setReceiptModal] = useState(false);
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState("");
 
   const catId = takeawayActiveCat || (data.categories[0]?.id ?? null);
 
@@ -58,6 +59,13 @@ export default function TakeawayView() {
   }, [data.items, takeawayCart, toast]);
 
   useBarcodeScan(handleBarcodeScan);
+
+  const submitBarcode = () => {
+    const code = barcodeInput.trim();
+    if (!code) return;
+    handleBarcodeScan(code);
+    setBarcodeInput("");
+  };
 
   function changeQty(itemId: string, delta: number) {
     const updated = takeawayCart
@@ -154,6 +162,21 @@ export default function TakeawayView() {
 
       {/* ── Left: Menu + Queue ── */}
       <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* Barcode scan box */}
+        <div>
+          <label className="block text-xs font-bold text-gray-500 mb-1.5">Barkod / tərəzi skan</label>
+          <div className="relative">
+            <input
+              value={barcodeInput}
+              onChange={e => setBarcodeInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submitBarcode(); } }}
+              placeholder="Tərəzi barkodunu skan edin və ya əl ilə yazın…"
+              className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl text-sm font-bold uppercase tracking-widest tabular-nums
+                focus:outline-none focus:border-[#FABB18] shadow-sm" />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300">⌨</span>
+          </div>
+        </div>
+
         {/* Category tabs */}
         <div className="flex gap-2 flex-wrap">
           {data.categories.map(c => (

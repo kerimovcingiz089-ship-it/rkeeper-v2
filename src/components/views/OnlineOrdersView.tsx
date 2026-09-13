@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney } from "../../lib/utils";
 import { printHtml } from "../../lib/print";
 import { buildReceiptHtml } from "../../lib/receiptHtml";
 import type { ReceiptData } from "../ui/Receipt";
 import { getCatEmoji } from "../../lib/categoryIcons";
+import { useBarcodeScan } from "../../lib/useBarcodeScan";
+import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
 import type { OnlineOrderStatus } from "../../types";
 
 const STATUS_CONFIG: Record<OnlineOrderStatus, { label: string; color: string; bg: string }> = {
@@ -52,9 +55,35 @@ const STATUS_ORDER: OnlineOrderStatus[] = ["new", "preparing", "ready", "complet
 
 export default function OnlineOrdersView() {
   const { data, clearOnlineBadge, updateOnlineOrderStatus, refreshOnlineOrders, toast } = useApp();
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [scanResult, setScanResult] = useState<{ item: any; weightKg?: number } | null>(null);
 
   const orders = data.onlineOrders;
   const hasNew = orders.some(o => o.status === "new");
+
+  const handleBarcodeScan = (code: string) => {
+    const trimmed = code.trim();
+    const item = findItemByBarcode(data.items, trimmed);
+    if (!item) {
+      setScanResult(null);
+      toast("Barkod üzrə məhsul tapılmadı");
+      return;
+    }
+    let weightKg: number | undefined;
+    if (isWeightedBarcode(trimmed)) {
+      weightKg = parseWeightedBarcode(trimmed)!.weightKg;
+    }
+    setScanResult({ item, weightKg });
+  };
+
+  const submitBarcode = () => {
+    const code = barcodeInput.trim();
+    if (!code) return;
+    handleBarcodeScan(code);
+    setBarcodeInput("");
+  };
+
+  useBarcodeScan((code) => { handleBarcodeScan(code); });
 
   function checkStock(order: { items: { name: string; qty: number }[] }): { ok: boolean; missing: string[] } {
     const missing: string[] = [];
@@ -120,6 +149,42 @@ export default function OnlineOrdersView() {
             className="px-4 py-2 rounded-xl text-xs font-bold text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition cursor-pointer">
             ↻ Yenilə
           </button>
+        )}
+      </div>
+
+      {/* Barcode scan box */}
+      <div className="bg-white border border-gray-100 rounded-2xl p-4 mb-5 shadow-sm">
+        <label className="block text-xs font-bold text-gray-500 mb-1.5">Barkod / tərəzi skan — stok yoxlama</label>
+        <div className="relative">
+          <input
+            value={barcodeInput}
+            onChange={e => setBarcodeInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submitBarcode(); } }}
+            placeholder="Məhsulu skan edin — stokunu yoxlayın…"
+            className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl text-sm font-bold uppercase tracking-widest tabular-nums
+              focus:outline-none focus:border-[#FABB18]" />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300">⌨</span>
+        </div>
+        {scanResult && (
+          <div className="flex items-center gap-3 mt-3 bg-gray-50 rounded-xl px-3 py-2.5">
+            {scanResult.item.imageUrl ? (
+              <img src={scanResult.item.imageUrl} alt={scanResult.item.name} className="w-10 h-10 rounded-lg object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-lg">
+                {getCatEmoji(data.categories.find(c => c.id === scanResult.item.categoryId)?.name ?? "")}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold truncate">{scanResult.item.name}</div>
+              <div className={`text-xs font-bold ${scanResult.item.stock > 0 ? "text-green-600" : "text-red-500"}`}>
+                Stok: {scanResult.item.stock}
+                {scanResult.weightKg != null && (
+                  <span className="text-gray-400 font-semibold ml-2">Çəki: {scanResult.weightKg.toFixed(3)} kq</span>
+                )}
+              </div>
+            </div>
+            <div className="text-sm font-extrabold tabular-nums text-[#3F2218]">{fmtMoney(scanResult.item.price, data.settings.currency)}</div>
+          </div>
         )}
       </div>
 
