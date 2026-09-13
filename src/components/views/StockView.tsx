@@ -1,8 +1,20 @@
+import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 
 export default function StockView() {
   const { data, currentUser, updateStockFor, toast } = useApp();
   const isAdmin = currentUser?.role === "admin";
+  const [search, setSearch] = useState("");
+
+  const q = search.trim().toLowerCase();
+  const filteredItems = data.items.filter(item => {
+    if (!q) return true;
+    const cat = data.categories.find(c => c.id === item.categoryId);
+    return item.name.toLowerCase().includes(q)
+      || String(item.pluCode ?? "").includes(q)
+      || (item.barcode || "").toLowerCase().includes(q)
+      || (cat?.name || "").toLowerCase().includes(q);
+  });
 
   async function handleAdjust(id: string, delta: number) {
     if (!isAdmin) { toast("Stoku yalnız Admin redaktə edə bilər"); return; }
@@ -46,6 +58,18 @@ export default function StockView() {
         </p>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-5">
+        <input
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Məhsul axtarın (ad, PLU, barkod, kateqoriya)…"
+          className="w-full px-4 py-3 pl-11 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18] shadow-sm" />
+        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </span>
+      </div>
+
       {/* Table — desktop */}
       <div className="hidden md:block bg-white border border-gray-200 rounded-2xl overflow-hidden">
         <table className="w-full border-collapse">
@@ -57,7 +81,12 @@ export default function StockView() {
             </tr>
           </thead>
           <tbody>
-            {data.items.map(item => {
+            {filteredItems.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-10 text-center text-gray-400 text-sm">Heç nə tapılmadı.</td>
+              </tr>
+            )}
+            {filteredItems.map(item => {
               const cat = data.categories.find(c => c.id === item.categoryId);
               const outOfStock = item.stock <= 0;
               const addValId = `add-val-${item.id}`;
@@ -107,7 +136,9 @@ export default function StockView() {
 
       {/* Mobile cards */}
       <div className="md:hidden space-y-3">
-        {data.items.map(item => {
+        {filteredItems.length === 0 ? (
+          <div className="py-10 text-center text-gray-400 text-sm">Heç nə tapılmadı.</div>
+        ) : filteredItems.map(item => {
           const cat = data.categories.find(c => c.id === item.categoryId);
           const outOfStock = item.stock <= 0;
           const addValId = `add-val-m-${item.id}`;
