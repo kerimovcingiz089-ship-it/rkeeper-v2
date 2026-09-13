@@ -1,6 +1,6 @@
 [package]
 name = "rkeeper"
-version = "2.2.8"
+version = "2.2.9"
 description = "Rkeeper POS - Kassa sistemi"
 authors = ["Arzum"]
 edition = "2021"
