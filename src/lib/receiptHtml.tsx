@@ -96,26 +96,26 @@ export function buildReceiptHtml(data: ReceiptData): string {
   const preText = textLines.join("\n");
   const escPre = preText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">  <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#fff;font-family:'Courier New',monospace;font-size:12.5px;color:#1a1a1a}
+body{background:#fff;font-family:'Courier New',monospace;font-size:12.5px;color:#000}
 .r{width:280px;padding:12px;margin:0 auto}
-.h1{text-align:center;font-weight:800;font-size:15px;text-transform:uppercase;letter-spacing:1px}
-.h2{text-align:center;font-size:10.5px;letter-spacing:2.5px;color:#6b7280;margin:4px 0 12px}
-.sep{border-top:1px dashed #9ca3af;margin:8px 0}
+.h1{text-align:center;font-weight:900;font-size:15px;text-transform:uppercase;letter-spacing:1px}
+.h2{text-align:center;font-size:10.5px;letter-spacing:2.5px;color:#000;margin:4px 0 12px}
+.sep{border-top:1px dashed #000;margin:8px 0}
 .flex{display:flex}
 .justify-between{justify-content:space-between}
 .py-0-5{padding:2px 0}
 .bold{font-weight:700}
-.c-gray{color:#6b7280}
-.c-gray-500{color:#6b7280}
-.c-gray-600{color:#4b5563}
+.c-gray{color:#000}
+.c-gray-500{color:#000}
+.c-gray-600{color:#000}
 .it{margin-bottom:6px}
-.empty{text-align:center;color:#9ca3af;font-size:12px}
-.total{font-weight:800;font-size:16px;padding:4px 0}
-.paid{text-align:center;border:2px solid #16a34a;color:#16a34a;font-weight:800;font-size:12px;letter-spacing:2px;border-radius:6px;padding:8px 0;margin-top:12px;transform:rotate(-1deg)}
-.notpaid{text-align:center;font-size:12px;color:#9ca3af;font-style:italic;margin-top:8px}
-.foot{text-align:center;font-size:12px;color:#6b7280;margin-top:8px}
+.empty{text-align:center;color:#000;font-size:12px}
+.total{font-weight:900;font-size:1.2rem;padding:4px 0}
+.paid{text-align:center;border:2px solid #16a34a;color:#16a34a;font-weight:900;font-size:12px;letter-spacing:2px;border-radius:6px;padding:8px 0;margin-top:12px;transform:rotate(-1deg)}
+.notpaid{text-align:center;font-size:12px;color:#000;font-style:italic;margin-top:8px}
+.foot{text-align:center;font-size:12px;color:#000;margin-top:8px}
 </style></head><body>${body.replace(/\n\s*/g, "\n")}
 <pre id="rectext" style="display:none">${escPre}</pre>
 </body></html>`;

@@ -27,7 +27,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
 }
 
 function drawSep(ctx: CanvasRenderingContext2D, y: number) {
-  ctx.strokeStyle = "#9ca3af";
+  ctx.strokeStyle = "#000";
   ctx.lineWidth = 1;
   ctx.setLineDash([4, 4]);
   ctx.beginPath();
@@ -47,7 +47,7 @@ function computeHeight(data: ReceiptData): number {
   y += data.items.length === 0 ? LH(12) : data.items.length * ITEM_H;
   y += SEP_H;
   y += ROW_H;
-  y += 4 + LH(16) + 4;
+  y += 4 + LH(19) + 4;
   if (data.paid) {
     y += ROW_H + 12 + (2 + 8 + LH(12) + 8 + 2);
   } else {
@@ -71,8 +71,8 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
   let y = PAD;
 
   // Title
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 15px Arial,sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.font = "900 15px Arial,sans-serif";
   const title = data.restaurantName.toUpperCase();
   const tw = ctx.measureText(title).width;
   ctx.fillText(title, PAD + (CONTENT_W - tw) / 2, y);
@@ -80,7 +80,7 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
 
   // Subtitle
   y += 4;
-  ctx.fillStyle = "#6b7280";
+  ctx.fillStyle = "#000";
   ctx.font = "10.5px Arial,sans-serif";
   const sub = data.paid ? "ÖDƏNİŞ QƏBZİ" : "SİFARİŞ ÇEKİ";
   const sw = ctx.measureText(sub).width;
@@ -94,12 +94,12 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
   y += 1 + 8;
 
   // Rows helper
-  const row = (label: string, value: string, boldValue = false) => {
-    ctx.fillStyle = "#6b7280";
-    ctx.font = "12.5px Arial,sans-serif";
+  const row = (label: string, value: string, boldValue = true) => {
+    ctx.fillStyle = "#000";
+    ctx.font = "400 12.5px Arial,sans-serif";
     ctx.fillText(label, PAD, y);
-    ctx.fillStyle = "#1a1a1a";
-    ctx.font = boldValue ? "bold 12.5px Arial,sans-serif" : "12.5px Arial,sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.font = boldValue ? "700 12.5px Arial,sans-serif" : "400 12.5px Arial,sans-serif";
     const vw = ctx.measureText(value).width;
     ctx.fillText(value, PAD + CONTENT_W - vw, y);
     y += ROW_H;
@@ -119,22 +119,23 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
 
   // Items
   if (data.items.length === 0) {
-    ctx.fillStyle = "#9ca3af";
-    ctx.font = "12px Arial,sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.font = "400 12px Arial,sans-serif";
     const t = "Məhsul yoxdur";
     const tW = ctx.measureText(t).width;
     ctx.fillText(t, PAD + (CONTENT_W - tW) / 2, y);
     y += LH(12);
   } else {
     for (const li of data.items) {
-      ctx.fillStyle = "#1a1a1a";
-      ctx.font = "bold 12.5px Arial,sans-serif";
+      ctx.fillStyle = "#000";
+      ctx.font = "700 12.5px Arial,sans-serif";
       ctx.fillText(li.name, PAD, y);
       y += LH(12.5);
-      ctx.fillStyle = "#4b5563";
-      ctx.font = "12.5px Arial,sans-serif";
+      ctx.fillStyle = "#000";
+      ctx.font = "400 12.5px Arial,sans-serif";
       const left = `${li.qty} × ${fmtMoney(li.price, data.currency)}`;
       ctx.fillText(left, PAD, y);
+      ctx.font = "700 12.5px Arial,sans-serif";
       const right = fmtMoney(li.price * li.qty, data.currency);
       const rw = ctx.measureText(right).width;
       ctx.fillText(right, PAD + CONTENT_W - rw, y);
@@ -152,28 +153,28 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
 
   // CƏMİ
   y += 4;
-  ctx.fillStyle = "#1a1a1a";
-  ctx.font = "bold 16px Arial,sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.font = "900 19px Arial,sans-serif";
   ctx.fillText("CƏMİ", PAD, y);
   const totalStr = fmtMoney(data.total, data.currency);
   const totalW = ctx.measureText(totalStr).width;
   ctx.fillText(totalStr, PAD + CONTENT_W - totalW, y);
-  y += LH(16) + 4;
+  y += LH(19) + 4;
 
   // Paid / Not paid
   if (data.paid) {
-    ctx.fillStyle = "#6b7280";
-    ctx.font = "12.5px Arial,sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.font = "400 12.5px Arial,sans-serif";
     ctx.fillText("Ödəniş növü", PAD, y);
-    ctx.fillStyle = "#1a1a1a";
-    ctx.font = "bold 12.5px Arial,sans-serif";
+    ctx.fillStyle = "#000";
+    ctx.font = "700 12.5px Arial,sans-serif";
     const payVal = data.paymentMethod === "cash" ? "Nağd" : "Kart";
     const pvw = ctx.measureText(payVal).width;
     ctx.fillText(payVal, PAD + CONTENT_W - pvw, y);
     y += ROW_H;
     y += 12;
     const boxText = "ÖDƏNİLİB";
-    ctx.font = "bold 12px Arial,sans-serif";
+    ctx.font = "900 12px Arial,sans-serif";
     const bw = ctx.measureText(boxText).width;
     const bpadX = 12;
     const bpadY = 8;
@@ -188,7 +189,7 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
     y += bH + 4;
   } else {
     y += 8;
-    ctx.fillStyle = "#9ca3af";
+    ctx.fillStyle = "#000";
     ctx.font = "italic 12px Arial,sans-serif";
     const t = "Ödəniş hələ qəbul olunmayıb";
     const tW = ctx.measureText(t).width;
@@ -203,8 +204,8 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
 
   // Footer
   y += 8;
-  ctx.fillStyle = "#6b7280";
-  ctx.font = "12px Arial,sans-serif";
+  ctx.fillStyle = "#000";
+  ctx.font = "400 12px Arial,sans-serif";
   const f1 = "Nuş olsun!";
   const f1W = ctx.measureText(f1).width;
   ctx.fillText(f1, PAD + (CONTENT_W - f1W) / 2, y);
