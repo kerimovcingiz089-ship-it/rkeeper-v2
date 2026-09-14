@@ -66,35 +66,35 @@ export function buildReceiptHtml(data: ReceiptData): string {
 </div>`;
 
   let textLines: string[] = [];
-  textLines.push(data.restaurantName);
-  textLines.push(data.paid ? "ÖDƏNİŞ QƏBZİ" : "SİFARİŞ ÇEKİ");
-  textLines.push("--------------------------------");
-  textLines.push(`Tarix    ${esc(date)}`);
-  textLines.push(`Saat     ${esc(time)}`);
-  textLines.push(`${data.isTakeaway ? "Sifariş" : "Masa"}    ${esc(data.tableName)}`);
-  textLines.push(`Çek №    ${esc("#" + String(data.receiptNo).padStart(5, "0"))}`);
-  textLines.push(`Kassir   ${esc(data.cashier)}`);
-  textLines.push("--------------------------------");
+  textLines.push(`HEAD|${data.restaurantName}`);
+  textLines.push(`SUB|${data.paid ? "ÖDƏNİŞ QƏBZİ" : "SİFARİŞ ÇEKİ"}`);
+  textLines.push("SEP");
+  textLines.push(`ROW|Tarix|${date}`);
+  textLines.push(`ROW|Saat|${time}`);
+  textLines.push(`ROW|${data.isTakeaway ? "Sifariş" : "Masa"}|${data.tableName}`);
+  textLines.push(`ROW|Çek №|#${String(data.receiptNo).padStart(5, "0")}`);
+  textLines.push(`ROW|Kassir|${data.cashier}`);
+  textLines.push("SEP");
   for (const li of data.items) {
-    textLines.push(esc(li.name));
-    textLines.push(`  ${li.qty} x ${esc(fmtMoney(li.price, data.currency))}   ${esc(fmtMoney(li.price * li.qty, data.currency))}`);
+    textLines.push(`ITEM|${li.name}`);
+    textLines.push(`QTY|${li.qty} × ${fmtMoney(li.price, data.currency)}|${fmtMoney(li.price * li.qty, data.currency)}`);
   }
-  if (data.items.length === 0) textLines.push("Məhsul yoxdur");
-  textLines.push("--------------------------------");
-  textLines.push(`Məhsul sayı   ${itemCount} ədəd`);
-  textLines.push(`CƏMİ   ${esc(fmtMoney(data.total, data.currency))}`);
+  if (data.items.length === 0) textLines.push("EMPTY|Məhsul yoxdur");
+  textLines.push("SEP");
+  textLines.push(`ROW|Məhsul sayı|${itemCount} ədəd`);
+  textLines.push(`TOTAL|CƏMİ|${fmtMoney(data.total, data.currency)}`);
   if (data.paid) {
-    textLines.push(`Ödəniş növü   ${data.paymentMethod === "cash" ? "Nağd" : "Kart"}`);
-    textLines.push("ÖDƏNİLİB");
+    textLines.push(`ROW|Ödəniş növü|${data.paymentMethod === "cash" ? "Nağd" : "Kart"}`);
+    textLines.push("PAID|ÖDƏNİLİB ✓");
   } else {
-    textLines.push("Ödəniş hələ qəbul olunmayıb");
+    textLines.push("NOTPAID|Ödəniş hələ qəbul olunmayıb");
   }
-  textLines.push("--------------------------------");
-  textLines.push("Nuş olsun!");
-  textLines.push("Yenidən gözləyirik");
+  textLines.push("SEP");
+  textLines.push("FOOT|Nuş olsun!");
+  textLines.push("FOOT|Yenidən gözləyirik");
 
   const preText = textLines.join("\n");
-  const escPre = preText.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&/g, "&amp;");
+  const escPre = preText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}
