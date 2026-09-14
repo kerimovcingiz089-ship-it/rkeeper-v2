@@ -5,7 +5,7 @@ import { printReceipt as printReceiptImage } from "../../lib/print";
 import type { ReceiptData } from "../ui/Receipt";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import { useBarcodeScan } from "../../lib/useBarcodeScan";
-import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
+import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode, searchItemsByText } from "../../lib/barcode";
 import type { OnlineOrderStatus } from "../../types";
 
 const STATUS_CONFIG: Record<OnlineOrderStatus, { label: string; color: string; bg: string }> = {
@@ -55,17 +55,21 @@ const STATUS_ORDER: OnlineOrderStatus[] = ["new", "preparing", "ready", "complet
 export default function OnlineOrdersView() {
   const { data, clearOnlineBadge, updateOnlineOrderStatus, refreshOnlineOrders, toast } = useApp();
   const [barcodeInput, setBarcodeInput] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [scanResult, setScanResult] = useState<{ item: any; weightKg?: number } | null>(null);
+
+  const searchResults = searchItemsByText(data.items, barcodeInput);
 
   const orders = data.onlineOrders;
   const hasNew = orders.some(o => o.status === "new");
 
   const handleBarcodeScan = (code: string) => {
     const trimmed = code.trim();
-    const item = findItemByBarcode(data.items, trimmed);
+    if (!trimmed) return;
+    const item = findItemByBarcode(data.items, trimmed) || searchItemsByText(data.items, trimmed, 1)[0];
     if (!item) {
       setScanResult(null);
-      toast("Barkod üzrə məhsul tapılmadı");
+      toast("Məhsul tapılmadı: " + trimmed);
       return;
     }
     let weightKg: number | undefined;
@@ -80,6 +84,7 @@ export default function OnlineOrdersView() {
     if (!code) return;
     handleBarcodeScan(code);
     setBarcodeInput("");
+    setSearchOpen(false);
   };
 
   useBarcodeScan((code) => { handleBarcodeScan(code); });
@@ -158,11 +163,29 @@ export default function OnlineOrdersView() {
           <input
             value={barcodeInput}
             onChange={e => setBarcodeInput(e.target.value)}
+            onFocus={() => setSearchOpen(true)}
+            onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
             onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submitBarcode(); } }}
-            placeholder="Məhsulu skan edin — stokunu yoxlayın…"
+            placeholder="Məhsulu skan edin və ya adını yazın — stokunu yoxlayın…"
             className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl text-sm font-bold uppercase tracking-widest tabular-nums
               focus:outline-none focus:border-[#FABB18]" />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300">⌨</span>
+          {searchOpen && searchResults.length > 0 && (
+            <div className="absolute z-20 top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-64 overflow-auto">
+              {searchResults.map(item => (
+                <button key={item.id}
+                  onClick={() => {
+                    setScanResult({ item });
+                    setBarcodeInput("");
+                    setSearchOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center justify-between gap-3 cursor-pointer">
+                  <span className="text-sm font-bold truncate">{getCatEmoji(item.categoryId)} {item.name}</span>
+                  <span className="text-sm font-black text-gray-700 whitespace-nowrap">{fmtMoney(item.price, data.settings.currency)}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {scanResult && (
           <div className="flex items-center gap-3 mt-3 bg-gray-50 rounded-xl px-3 py-2.5">

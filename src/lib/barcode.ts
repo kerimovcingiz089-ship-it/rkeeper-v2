@@ -31,3 +31,16 @@ export function findItemByBarcode(items: MenuItem[], code: string): MenuItem | u
   }
   return items.find((i) => i.barcode === code);
 }
+
+export function searchItemsByText(items: MenuItem[], query: string, limit = 6): MenuItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return items
+    .filter(
+      (i) =>
+        i.name.toLowerCase().includes(q) ||
+        (i.pluCode != null && String(i.pluCode).startsWith(q)) ||
+        (i.barcode != null && i.barcode.includes(q))
+    )
+    .slice(0, limit);
+}

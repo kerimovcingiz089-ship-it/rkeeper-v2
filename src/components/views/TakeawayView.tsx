@@ -4,7 +4,7 @@ import { fmtMoney, fmtTime, uid } from "../../lib/utils";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import { printReceipt as printReceiptImage } from "../../lib/print";
 import { useBarcodeScan } from "../../lib/useBarcodeScan";
-import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
+import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode, searchItemsByText } from "../../lib/barcode";
 import Modal from "../ui/Modal";
 import Receipt, { type ReceiptData } from "../ui/Receipt";
 
@@ -23,6 +23,9 @@ export default function TakeawayView() {
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const searchResults = searchItemsByText(data.items, barcodeInput);
 
   const catId = takeawayActiveCat || (data.categories[0]?.id ?? null);
 
@@ -41,6 +44,7 @@ export default function TakeawayView() {
 
   const handleBarcodeScan = useCallback((code: string) => {
     const trimmed = code.trim();
+    if (!trimmed) return;
     if (isWeightedBarcode(trimmed)) {
       const parsed = parseWeightedBarcode(trimmed)!;
       const item = findItemByBarcode(data.items, trimmed);
@@ -50,10 +54,12 @@ export default function TakeawayView() {
       toast("✔ " + item.name + " — " + parsed.weightKg.toFixed(3) + " kq");
       return;
     }
-    const item = findItemByBarcode(data.items, trimmed);
+    const item = findItemByBarcode(data.items, trimmed) || searchItemsByText(data.items, trimmed, 1)[0];
     if (item) {
       if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
       addToCart(item.id, 1);
+    } else {
+      toast("Məhsul tapılmadı: " + trimmed);
     }
   }, [data.items, takeawayCart, toast]);
 
@@ -64,6 +70,7 @@ export default function TakeawayView() {
     if (!code) return;
     handleBarcodeScan(code);
     setBarcodeInput("");
+    setSearchOpen(false);
   };
 
   function changeQty(itemId: string, delta: number) {
@@ -168,11 +175,30 @@ export default function TakeawayView() {
             <input
               value={barcodeInput}
               onChange={e => setBarcodeInput(e.target.value)}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setTimeout(() => setSearchOpen(false), 150)}
               onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); submitBarcode(); } }}
-              placeholder="Tərəzi barkodunu skan edin və ya əl ilə yazın…"
+              placeholder="Barkod skan edin və ya məhsul adı yazın…"
               className="w-full px-4 py-3 pr-11 border border-gray-200 rounded-xl text-sm font-bold uppercase tracking-widest tabular-nums
                 focus:outline-none focus:border-[#FABB18] shadow-sm" />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300">⌨</span>
+            {searchOpen && searchResults.length > 0 && (
+              <div className="absolute z-20 top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-64 overflow-auto">
+                {searchResults.map(item => (
+                  <button key={item.id}
+                    onClick={() => {
+                      if (item.stock <= 0) { toast("❌ Bu məhsul stokda yoxdur!"); return; }
+                      addToCart(item.id, 1);
+                      setBarcodeInput("");
+                      setSearchOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center justify-between gap-3 cursor-pointer">
+                    <span className="text-sm font-bold truncate">{getCatEmoji(item.categoryId)} {item.name}</span>
+                    <span className="text-sm font-black text-gray-700 whitespace-nowrap">{fmtMoney(item.price, data.settings.currency)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
