@@ -4,6 +4,7 @@
 - **Web (Vercel):** `git push` — Vercel avtomatik build edib deploy edir
 - **Desktop (Tauri):** `npm run tauri build` → `.msi` faylı `src-tauri/target/release/bundle/msi/`
 - Build: `npm run build` (web) / `npm run tauri build` (desktop)
+- **HƏR dəyişiklikdən sonra MÜTLƏQ versiyanı qaldır** (package.json, tauri.conf.json, Cargo.toml, SettingsView.tsx) və yeni GitHub release + asset burax.
 
 ## Ümumi
 - İstifadəçi **Azərbaycan** dilində danışır
