@@ -2,8 +2,7 @@ import { useState, useCallback } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney, fmtTime, uid } from "../../lib/utils";
 import { getCatEmoji } from "../../lib/categoryIcons";
-import { printHtml } from "../../lib/print";
-import { buildReceiptHtml } from "../../lib/receiptHtml";
+import { printReceipt as printReceiptImage } from "../../lib/print";
 import { useBarcodeScan } from "../../lib/useBarcodeScan";
 import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
 import Modal from "../ui/Modal";
@@ -143,7 +142,7 @@ export default function TakeawayView() {
   function printReceipt() {
     if (!receiptData) return;
     try {
-      printHtml(buildReceiptHtml(receiptData)).catch((e) => {
+      printReceiptImage(receiptData).catch((e) => {
         console.error(e);
         toast("Çap xətası: " + (e?.message || String(e)));
       });

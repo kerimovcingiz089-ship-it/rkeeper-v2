@@ -1,8 +1,7 @@
 import { useState, useCallback } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney } from "../../lib/utils";
-import { printHtml } from "../../lib/print";
-import { buildReceiptHtml } from "../../lib/receiptHtml";
+import { printReceipt as printReceiptImage } from "../../lib/print";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import { useBarcodeScan } from "../../lib/useBarcodeScan";
 import { parseWeightedBarcode, isWeightedBarcode, findItemByBarcode } from "../../lib/barcode";
@@ -163,7 +162,7 @@ export default function OrderView() {
     if (!receiptData) return;
     setData(prev => ({ ...prev, nextReceiptNo: (prev.nextReceiptNo || 1) + 1 }));
     try {
-      printHtml(buildReceiptHtml(receiptData)).catch((e) => {
+      printReceiptImage(receiptData).catch((e) => {
         console.error(e);
         toast("Çap xətası: " + (e?.message || String(e)));
       });

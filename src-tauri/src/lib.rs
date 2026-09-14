@@ -141,6 +141,72 @@ try {
 }
 
 #[tauri::command]
+fn print_receipt_image(base64: String) -> Result<(), String> {
+    let temp_dir = std::env::temp_dir();
+    let b64_path = temp_dir.join("rkeeper_receipt_b64.txt");
+    std::fs::write(&b64_path, &base64).map_err(|e| e.to_string())?;
+
+    let script = r#"
+$ErrorActionPreference = "Stop"
+Add-Type -AssemblyName System.Drawing
+
+$b64 = Get-Content (Join-Path $env:TEMP "rkeeper_receipt_b64.txt") -Raw
+$bytes = [Convert]::FromBase64String($b64.Trim())
+$ms = New-Object System.IO.MemoryStream(,$bytes)
+$img = [System.Drawing.Image]::FromStream($ms)
+
+$doc = New-Object System.Drawing.Printing.PrintDocument
+$doc.OriginAtMargins = $false
+$doc.DefaultPageSettings.Margins = New-Object System.Drawing.Printing.Margins(10, 10, 10, 10)
+$doc.add_PrintPage({
+    param($sender, $e)
+    $g = $e.Graphics
+    $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+    $g.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::HighQuality
+    $g.PageUnit = [System.Drawing.GraphicsUnit]::Display
+    $w = 283.5
+    $h = [Single]($img.Height / $img.Width * $w)
+    $x = [Single]$e.MarginBounds.X
+    $y = [Single]$e.MarginBounds.Y
+    $g.DrawImage($img, $x, $y, $w, $h)
+})
+try {
+    $doc.Print()
+} finally {
+    if ($img) { $img.Dispose() }
+    if ($doc) { $doc.Dispose() }
+}
+"#;
+
+    let script_path = temp_dir.join("rkeeper_print_image.ps1");
+    let mut script_bytes = Vec::new();
+    script_bytes.extend_from_slice(&[0xEF, 0xBB, 0xBF]);
+    script_bytes.extend_from_slice(script.as_bytes());
+    std::fs::write(&script_path, script_bytes).map_err(|e| e.to_string())?;
+
+    let output = Command::new("powershell")
+        .args([
+            "-NoProfile",
+            "-STA",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            script_path.to_str().unwrap(),
+        ])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        if !stderr.trim().is_empty() {
+            return Err(format!("Grafik cap xetasi: {}", stderr));
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn download_update(url: String) -> Result<String, String> {
     let temp_dir = std::env::temp_dir();
     let file_path = temp_dir.join("rkeeper_update.exe");
@@ -191,6 +257,7 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![
             print_receipt,
+            print_receipt_image,
             download_update,
             install_update
         ])

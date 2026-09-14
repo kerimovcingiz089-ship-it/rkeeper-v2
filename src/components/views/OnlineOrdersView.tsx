@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useApp } from "../../context/AppContext";
 import { fmtMoney } from "../../lib/utils";
-import { printHtml } from "../../lib/print";
-import { buildReceiptHtml } from "../../lib/receiptHtml";
+import { printReceipt as printReceiptImage } from "../../lib/print";
 import type { ReceiptData } from "../ui/Receipt";
 import { getCatEmoji } from "../../lib/categoryIcons";
 import { useBarcodeScan } from "../../lib/useBarcodeScan";
@@ -32,7 +31,7 @@ function printOnlineReceipt(order: any, data: any, onErr: (m: string) => void) {
     currency: data.settings.currency,
   };
   try {
-    printHtml(buildReceiptHtml(d)).catch((e) => {
+    printReceiptImage(d).catch((e) => {
       console.error(e);
       onErr("Çap xətası: " + (e?.message || String(e)));
     });
