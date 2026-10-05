@@ -3,7 +3,19 @@ import { fmtMoney, fmtTime, todayStr } from "../../lib/utils";
 import type { HistoryRecord } from "../../types";
 
 export default function ReportsView() {
-  const { data, reportDate, setReportDate } = useApp();
+  const { data, reportDate, setReportDate, currentUser, toast, deleteOrderAndRefresh } = useApp();
+  const isAdmin = currentUser?.role === "admin";
+
+  async function handleDeleteCheck(id: string, label: string) {
+    if (!confirm(`"${label}" çekini silmək istəyirsiniz? Bu əməliyyat geri qaytarıla bilməz.`)) return;
+    try {
+      await deleteOrderAndRefresh(id);
+      toast("Çek silindi");
+    } catch (e) {
+      console.error(e);
+      toast("Silinmə zamanı xəta baş verdi");
+    }
+  }
 
   // Merge online orders into history for reports
   const onlineAsHistory: HistoryRecord[] = data.onlineOrders
@@ -118,11 +130,14 @@ export default function ReportsView() {
                     {["Vaxt","Masa/Sifariş","Sifariş","Kassir","Ödəniş","Məbləğ"].map(h => (
                       <th key={h} className="text-left text-[11px] uppercase tracking-wide text-gray-400 font-bold px-4 py-3 border-b border-gray-100">{h}</th>
                     ))}
+                    {isAdmin && (
+                      <th className="text-right text-[11px] uppercase tracking-wide text-gray-400 font-bold px-4 py-3 border-b border-gray-100">Sil</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {dayHistory.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-gray-400">Bu tarixdə satış qeydə alınmayıb.</td></tr>
+                    <tr><td colSpan={isAdmin ? 7 : 6} className="px-4 py-8 text-center text-sm text-gray-400">Bu tarixdə satış qeydə alınmayıb.</td></tr>
                   ) : dayHistory.map(h => (
                     <tr key={h.id} className={`border-b border-gray-50 last:border-0 transition-colors ${h.isTakeaway ? 'bg-orange-50/40 hover:bg-orange-50/70' : 'hover:bg-gray-50/50'}`}>
                       <td className="px-4 py-3 text-sm text-gray-500">{fmtTime(h.closedAt)}</td>
@@ -142,6 +157,16 @@ export default function ReportsView() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm font-extrabold text-right tabular-nums">{fmtMoney(h.total, data.settings.currency)}</td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            onClick={() => handleDeleteCheck(h.id, `${h.tableName} — ${fmtMoney(h.total, data.settings.currency)}`)}
+                            title="Çeki sil"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition cursor-pointer">
+                            🗑
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -154,15 +179,25 @@ export default function ReportsView() {
                 <div className="px-4 py-8 text-center text-sm text-gray-400">Bu tarixdə satış qeydə alınmayıb.</div>
               ) : dayHistory.map(h => (
                 <div key={h.id} className={`px-4 py-3 ${h.isTakeaway ? 'bg-orange-50/40' : ''}`}>
-                  <div className="flex justify-between items-center mb-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] flex-shrink-0 ${h.isTakeaway ? 'bg-orange-100' : 'bg-[#FEF3C7]'}`}>
-                        {h.isTakeaway ? '📦' : '🍽'}
-                      </span>
-                      <span className="font-bold text-sm">{h.tableName}</span>
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] flex-shrink-0 ${h.isTakeaway ? 'bg-orange-100' : 'bg-[#FEF3C7]'}`}>
+                          {h.isTakeaway ? '📦' : '🍽'}
+                        </span>
+                        <span className="font-bold text-sm">{h.tableName}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-sm tabular-nums">{fmtMoney(h.total, data.settings.currency)}</span>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteCheck(h.id, `${h.tableName} — ${fmtMoney(h.total, data.settings.currency)}`)}
+                            title="Çeki sil"
+                            className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:text-red-600 transition cursor-pointer">
+                            🗑
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-extrabold text-sm tabular-nums">{fmtMoney(h.total, data.settings.currency)}</span>
-                  </div>
                   <div className="flex gap-2 items-center text-xs text-gray-400 pl-8 flex-wrap">
                     <span>{fmtTime(h.closedAt)}</span>
                     <span className="text-gray-500 font-bold">👤 {h.closedBy}</span>

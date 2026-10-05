@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord } from "../lib/supabaseApi";
 import { t, type LangCode } from "../lib/translations";
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -61,6 +61,8 @@ interface AppCtx {
   updateStockFor: (itemId: string, newStock: number) => Promise<void>;
   /* order save helper */
   saveOrderAndRefresh: (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean }) => Promise<void>;
+  /* order delete helper (history id, or "online-<id>") */
+  deleteOrderAndRefresh: (id: string) => Promise<void>;
   /* user CRUD */
   addUserAndRefresh: (name: string, username: string, password: string, role: string) => Promise<User | null>;
   updateUserAndRefresh: (id: string, fields: { name?: string; username?: string; password?: string; role?: string }) => Promise<void>;
@@ -353,6 +355,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await refreshOrders();
   }, [refreshOrders]);
 
+  /* ── order delete helper ── */
+  const deleteOrderAndRefresh = useCallback(async (id: string) => {
+    if (id.startsWith("online-")) {
+      const oid = id.slice("online-".length);
+      await deleteOnlineOrderRecord(oid);
+      setDataRaw((prev) => {
+        const next = { ...prev, onlineOrders: prev.onlineOrders.filter((o) => String(o.id) !== oid) };
+        saveData(next);
+        return next;
+      });
+    } else {
+      await deleteOrder(id);
+      setDataRaw((prev) => {
+        const next = { ...prev, history: prev.history.filter((h) => String(h.id) !== String(id)) };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
   return (
     <Ctx.Provider
       value={{
@@ -368,7 +390,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toast, toastMsg,
         newOnlineOrdersCount, clearOnlineBadge, updateOnlineOrderStatus,
         refreshProducts, refreshOrders, refreshUsers, refreshCategories, refreshOnlineOrders,
-        updateStockFor, saveOrderAndRefresh,
+        updateStockFor, saveOrderAndRefresh, deleteOrderAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,
         resetAllDataAndRefresh,
         lang, setLang, t: translate,
