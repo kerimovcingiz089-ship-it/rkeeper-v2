@@ -21,6 +21,7 @@ interface AppCtx {
 
   currentUser: User | null;
   login: (username: string, password: string) => boolean;
+  loginByPin: (pin: string) => boolean;
   logout: () => void;
 
   currentView: View;
@@ -73,8 +74,8 @@ interface AppCtx {
   addDebtPaymentAndRefresh: (id: string, p: { amount: number; dateStr: string; note?: string }) => Promise<void>;
   deleteDebtAndRefresh: (id: string) => Promise<void>;
   /* user CRUD */
-  addUserAndRefresh: (name: string, username: string, password: string, role: string) => Promise<User | null>;
-  updateUserAndRefresh: (id: string, fields: { name?: string; username?: string; password?: string; role?: string }) => Promise<void>;
+  addUserAndRefresh: (name: string, username: string, password: string, role: string, pin?: string) => Promise<User | null>;
+  updateUserAndRefresh: (id: string, fields: { name?: string; username?: string; password?: string; role?: string; pin?: string }) => Promise<void>;
   deleteUserAndRefresh: (id: string) => Promise<void>;
   /* reset */
   resetAllDataAndRefresh: () => Promise<void>;
@@ -141,6 +142,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const user = users.find(
       (u) => u.username.toLowerCase() === username.toLowerCase() && u.password === password
     );
+    if (!user) return false;
+    setCurrentUser(user);
+    localStorage.setItem(SESSION_KEY, user.id);
+    return true;
+  }
+
+  function loginByPin(pin: string): boolean {
+    const code = pin.trim();
+    if (!/^\d{4}$/.test(code)) return false;
+    const users = data.users.length > 0 ? data.users : [];
+    const user = users.find((u) => (u.pin || "") === code);
     if (!user) return false;
     setCurrentUser(user);
     localStorage.setItem(SESSION_KEY, user.id);
@@ -237,11 +249,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /* ── user CRUD helpers ── */
-  const addUserAndRefresh = useCallback(async (name: string, username: string, password: string, role: string) => {
-    return await addUser(name, username, password, role);
+  const addUserAndRefresh = useCallback(async (name: string, username: string, password: string, role: string, pin: string = "") => {
+    return await addUser(name, username, password, role, pin);
   }, []);
 
-  const updateUserAndRefresh = useCallback(async (id: string, fields: { name?: string; username?: string; password?: string; role?: string }) => {
+  const updateUserAndRefresh = useCallback(async (id: string, fields: { name?: string; username?: string; password?: string; role?: string; pin?: string }) => {
     await updateUser(id, fields);
   }, []);
 
@@ -455,7 +467,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider
       value={{
         data, setData, persist,
-        currentUser, login, logout,
+        currentUser, login, loginByPin, logout,
         currentView, switchView,
         activeTableId, setActiveTableId,
         activeCatId, setActiveCatId,

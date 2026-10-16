@@ -404,6 +404,7 @@ export async function fetchUsers(): Promise<User[] | null> {
       username: u.username,
       password: u.password,
       role: u.role,
+      pin: u.pin || "",
     }));
   } catch (err) {
     console.error("fetchUsers:", err);
@@ -411,26 +412,27 @@ export async function fetchUsers(): Promise<User[] | null> {
   }
 }
 
-export async function addUser(name: string, username: string, password: string, role: string): Promise<User | null> {
+export async function addUser(name: string, username: string, password: string, role: string, pin: string = ""): Promise<User | null> {
   try {
-    const { data, error } = await supabase.from("users").insert([{ name, username, password, role }]).select();
+    const { data, error } = await supabase.from("users").insert([{ name, username, password, role, pin }]).select();
     if (error) { console.error("Supabase insert user:", error); return null; }
     if (!data?.[0]) return null;
     const u = data[0];
-    return { id: String(u.id), name: u.name, username: u.username, password: u.password, role: u.role };
+    return { id: String(u.id), name: u.name, username: u.username, password: u.password, role: u.role, pin: u.pin || "" };
   } catch (err) {
     console.error("addUser:", err);
     return null;
   }
 }
 
-export async function updateUser(id: string, fields: { name?: string; username?: string; password?: string; role?: string }): Promise<void> {
+export async function updateUser(id: string, fields: { name?: string; username?: string; password?: string; role?: string; pin?: string }): Promise<void> {
   try {
     const patch: Record<string, any> = {};
     if (fields.name != null) patch.name = fields.name;
     if (fields.username != null) patch.username = fields.username;
     if (fields.password != null && fields.password !== "") patch.password = fields.password;
     if (fields.role != null) patch.role = fields.role;
+    if (fields.pin != null) patch.pin = fields.pin;
     if (Object.keys(patch).length === 0) return;
     const { error } = await supabase.from("users").update(patch).eq("id", id);
     if (error) console.error("Supabase update user:", error);

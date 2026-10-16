@@ -16,7 +16,7 @@
 ## POS App (`src/`)
 - **Məntiqi:** localStorage əsas yaddaş, Supabase backup/sync
 - **Auth:** lokal users array-i ilə (Supabase Auth istifadə olunmur)
-- **Default users:** admin/admin123 (admin), kassa/kassa123 (kassa)
+- **Default users:** admin/admin123 (admin, PIN 1111), kassa/kassa123 (kassa, PIN 2222)
 - **Routing:** URL yox, `currentView` state-i ilə
 - **Vite plugin:** `vite-plugin-singlefile` — hər şey bir HTML faylına yığılır
 - **State:** AppContext.tsx — bütün qlobal state

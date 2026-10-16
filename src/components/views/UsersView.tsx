@@ -17,25 +17,29 @@ export default function UsersView() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("kassa");
+  const [pin, setPin] = useState("");
   const [saving, setSaving] = useState(false);
 
   if (!isAdmin) return <div className="py-16 text-center text-gray-400 text-sm">Bu bölməyə giriş icazəniz yoxdur.</div>;
 
-  function openAdd() { setName(""); setUsername(""); setPassword(""); setRole("kassa"); setModal({ type: "add" }); }
+  function openAdd() { setName(""); setUsername(""); setPassword(""); setRole("kassa"); setPin(""); setModal({ type: "add" }); }
   function openEdit(id: string) {
     const u = data.users.find(x => x.id === id)!;
-    setName(u.name); setUsername(u.username); setPassword(""); setRole(u.role);
+    setName(u.name); setUsername(u.username); setPassword(""); setRole(u.role); setPin(u.pin || "");
     setModal({ type: "edit", id });
   }
 
   async function save() {
     if (!name.trim() || !username.trim()) { toast("Ad və istifadəçi adını doldurun"); return; }
+    const cleanPin = pin.replace(/\D/g, "").slice(0, 4);
+    if (cleanPin && !/^\d{4}$/.test(cleanPin)) { toast("PIN kodu 4 rəqəmli olmalıdır"); return; }
     setSaving(true);
     try {
       if (modal?.type === "add") {
         if (!password) { toast("Şifrə daxil edin"); setSaving(false); return; }
         if (data.users.some(u => u.username.toLowerCase() === username.toLowerCase())) { toast("Bu istifadəçi adı artıq mövcuddur"); setSaving(false); return; }
-        const result = await addUserAndRefresh(name.trim(), username.trim(), password, role);
+        if (cleanPin && data.users.some(u => (u.pin || "") === cleanPin)) { toast("Bu PIN kodu artıq başqa istifadəçiyə təhkim olunub"); setSaving(false); return; }
+        const result = await addUserAndRefresh(name.trim(), username.trim(), password, role, cleanPin);
         if (result) {
           await refreshUsers();
           toast("İstifadəçi əlavə olundu");
@@ -46,10 +50,11 @@ export default function UsersView() {
         const uid2 = modal.id;
         const target = data.users.find(u => u.id === uid2)!;
         if (data.users.some(u => u.id !== uid2 && u.username.toLowerCase() === username.toLowerCase())) { toast("Bu istifadəçi adı artıq mövcuddur"); setSaving(false); return; }
+        if (cleanPin && data.users.some(u => u.id !== uid2 && (u.pin || "") === cleanPin)) { toast("Bu PIN kodu artıq başqa istifadəçiyə təhkim olunub"); setSaving(false); return; }
         if (target.role === "admin" && role === "kassa" && data.users.filter(u => u.role === "admin" && u.id !== uid2).length === 0) {
           toast("Son admin rolunu dəyişmək olmaz"); setSaving(false); return;
         }
-        await updateUserAndRefresh(uid2, { name: name.trim(), username: username.trim(), role, password });
+        await updateUserAndRefresh(uid2, { name: name.trim(), username: username.trim(), role, password, pin: cleanPin });
         await refreshUsers();
         toast("Yadda saxlanıldı");
       }
@@ -105,6 +110,9 @@ export default function UsersView() {
                   ${isAdmin2 ? "bg-[#FEF3C7] text-[#3F2218]" : "bg-[#FEF7D7] text-[#8B6914]"}`}>
                   {isAdmin2 ? "Admin" : "Kassir"}
                 </span>
+                {(u.pin || "") !== "" && (
+                  <span title="PIN kod təyin olunub" className="text-xs font-bold px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">🔢 PIN</span>
+                )}
                 <button onClick={() => openEdit(u.id)}
                   className="w-7 h-7 border border-gray-200 bg-white rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-50 transition text-xs cursor-pointer">✎</button>
                 <button onClick={() => delUser(u.id)} disabled={isSelf}
@@ -132,6 +140,10 @@ export default function UsersView() {
                 className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
             </div>
           ))}
+          <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">PIN kod (4 rəqəm, boş saxla — PIN girişi deaktiv)</label>
+          <input type="text" inputMode="numeric" maxLength={4} value={pin}
+            onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="Məs. 1234"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm tracking-[0.5em] font-bold focus:outline-none focus:border-[#FABB18]" />
           <label className="block text-xs font-bold text-gray-400 mt-3 mb-1.5">Rol</label>
           <select value={role} onChange={e => setRole(e.target.value as Role)}
             className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]">

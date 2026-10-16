@@ -46,8 +46,8 @@ export function defaultData(): AppData {
     nextTakeawayNo: 1,
     nextReceiptNo: 1,
     users: [
-      { id: "u1", name: "Admin",  username: "admin", password: "admin123", role: "admin" },
-      { id: "u2", name: "Kassir", username: "kassa", password: "kassa123", role: "kassa" },
+      { id: "u1", name: "Admin",  username: "admin", password: "admin123", role: "admin", pin: "1111" },
+      { id: "u2", name: "Kassir", username: "kassa", password: "kassa123", role: "kassa", pin: "2222" },
     ],
     salaries: [],
     debts: [],
@@ -72,7 +72,7 @@ export function loadData(): AppData {
       nextOnlineOrderNo: parsed.nextOnlineOrderNo || 1,
       nextTakeawayNo: parsed.nextTakeawayNo || 1,
       nextReceiptNo:  parsed.nextReceiptNo  || 1,
-      users:          parsed.users?.length          ? parsed.users          : def.users,
+      users:          parsed.users?.length          ? parsed.users.map((u: any) => ({ ...u, pin: u.pin ?? "" })) : def.users,
       salaries:       parsed.salaries       || [],
       debts:          (parsed.debts || []).map((d: any) => ({ ...d, payments: d.payments || [] })),
     };
