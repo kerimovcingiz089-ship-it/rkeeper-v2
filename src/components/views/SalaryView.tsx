@@ -11,7 +11,7 @@ export default function SalaryView() {
   const { data, currentUser, toast, addSalaryAndRefresh, deleteSalaryAndRefresh } = useApp();
   const isAdmin = currentUser?.role === "admin";
 
-  const [userId, setUserId] = useState("");
+  const [employeeName, setEmployeeName] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(todayStr());
   const [note, setNote] = useState("");
@@ -22,22 +22,23 @@ export default function SalaryView() {
   if (!isAdmin) return <div className="py-16 text-center text-gray-400 text-sm">Bu bölməyə giriş icazəniz yoxdur.</div>;
 
   async function save() {
-    const user = data.users.find(u => u.id === userId);
+    const name = employeeName.trim();
     const sum = Number(amount);
-    if (!user) { toast("İşçini seçin"); return; }
+    if (!name) { toast("İşçinin adını yazın"); return; }
     if (!sum || sum <= 0) { toast("Məbləği daxil edin"); return; }
     if (!date) { toast("Tarixi seçin"); return; }
     setSaving(true);
     try {
+      const matched = data.users.find(u => u.name.toLowerCase() === name.toLowerCase());
       await addSalaryAndRefresh({
-        userId: user.id,
-        employeeName: user.name,
+        userId: matched?.id ?? "",
+        employeeName: name,
         amount: sum,
         dateStr: date,
         note: note.trim(),
         paidBy: currentUser?.name ?? "",
       });
-      setUserId(""); setAmount(""); setNote(""); setDate(todayStr());
+      setEmployeeName(""); setAmount(""); setNote(""); setDate(todayStr());
       toast("Maaş qeyd olundu");
     } finally {
       setSaving(false);
@@ -65,13 +66,13 @@ export default function SalaryView() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="lg:col-span-1">
             <label className="block text-xs font-bold text-gray-400 mb-1.5">İşçi</label>
-            <select value={userId} onChange={e => setUserId(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18] cursor-pointer">
-              <option value="">Seçin…</option>
+            <input value={employeeName} onChange={e => setEmployeeName(e.target.value)} placeholder="Məs. Əli Vəliyev" list="salary-employees"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#FABB18]" />
+            <datalist id="salary-employees">
               {data.users.map(u => (
-                <option key={u.id} value={u.id}>{u.name} ({u.role === "admin" ? "Admin" : "Kassir"})</option>
+                <option key={u.id} value={u.name} />
               ))}
-            </select>
+            </datalist>
           </div>
           <div>
             <label className="block text-xs font-bold text-gray-400 mb-1.5">Məbləğ ({data.settings.currency})</label>
