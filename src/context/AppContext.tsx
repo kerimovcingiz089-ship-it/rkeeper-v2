@@ -8,11 +8,11 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord, fetchSalaries, addSalary, deleteSalary, fetchDebts, addDebt, updateDebtPayments, deleteDebt } from "../lib/supabaseApi";
 import { t, type LangCode } from "../lib/translations";
 
 /* ─── Types ─────────────────────────────────────────────── */
-type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "users" | "settings";
+type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "salary" | "debts" | "users" | "settings";
 
 interface AppCtx {
   data: AppData;
@@ -63,6 +63,15 @@ interface AppCtx {
   saveOrderAndRefresh: (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean }) => Promise<void>;
   /* order delete helper (history id, or "online-<id>") */
   deleteOrderAndRefresh: (id: string) => Promise<void>;
+  /* salaries */
+  refreshSalaries: () => Promise<void>;
+  addSalaryAndRefresh: (s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => Promise<void>;
+  deleteSalaryAndRefresh: (id: string) => Promise<void>;
+  /* debts */
+  refreshDebts: () => Promise<void>;
+  addDebtAndRefresh: (d: { personName: string; kind: string; totalAmount: number; dateStr: string; note?: string }) => Promise<void>;
+  addDebtPaymentAndRefresh: (id: string, p: { amount: number; dateStr: string; note?: string }) => Promise<void>;
+  deleteDebtAndRefresh: (id: string) => Promise<void>;
   /* user CRUD */
   addUserAndRefresh: (name: string, username: string, password: string, role: string) => Promise<User | null>;
   updateUserAndRefresh: (id: string, fields: { name?: string; username?: string; password?: string; role?: string }) => Promise<void>;
@@ -154,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   /* ── view switch ── */
   const ROLE_NAV: Record<string, View[]> = {
-    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "users", "settings"],
+    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "users", "settings"],
     kassa: ["tables", "order", "takeaway", "online", "stock", "reports"],
   };
 
@@ -257,6 +266,71 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     await refreshOrders();
   }, []);
 
+  /* ── salaries & debts ── */
+  const refreshSalaries = useCallback(async () => {
+    const salaries = await fetchSalaries();
+    if (salaries) {
+      setDataRaw((prev) => {
+        const next = { ...prev, salaries };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
+  const refreshDebts = useCallback(async () => {
+    const debts = await fetchDebts();
+    if (debts) {
+      setDataRaw((prev) => {
+        const next = { ...prev, debts };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
+  const addSalaryAndRefresh = useCallback(async (s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => {
+    await addSalary(s);
+    await refreshSalaries();
+  }, [refreshSalaries]);
+
+  const deleteSalaryAndRefresh = useCallback(async (id: string) => {
+    await deleteSalary(id);
+    setDataRaw((prev) => {
+      const next = { ...prev, salaries: prev.salaries.filter((s) => String(s.id) !== String(id)) };
+      saveData(next);
+      return next;
+    });
+  }, []);
+
+  const addDebtAndRefresh = useCallback(async (d: { personName: string; kind: string; totalAmount: number; dateStr: string; note?: string }) => {
+    await addDebt(d);
+    await refreshDebts();
+  }, [refreshDebts]);
+
+  const addDebtPaymentAndRefresh = useCallback(async (id: string, p: { amount: number; dateStr: string; note?: string }) => {
+    const payment = { ...p, createdAt: Date.now() };
+    setDataRaw((prev) => {
+      const next = {
+        ...prev,
+        debts: prev.debts.map((d) => (String(d.id) === String(id) ? { ...d, payments: [...d.payments, payment] } : d)),
+      };
+      saveData(next);
+      const updated = next.debts.find((d) => String(d.id) === String(id));
+      if (updated) updateDebtPayments(id, updated.payments);
+      return next;
+    });
+  }, []);
+
+  const deleteDebtAndRefresh = useCallback(async (id: string) => {
+    await deleteDebt(id);
+    setDataRaw((prev) => {
+      const next = { ...prev, debts: prev.debts.filter((d) => String(d.id) !== String(id)) };
+      saveData(next);
+      return next;
+    });
+  }, []);
+
   /* ── initial load ── */
   useEffect(() => {
     (async () => {
@@ -265,6 +339,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await refreshOrders();
       await refreshUsers();
       await refreshOnlineOrders();
+      await refreshSalaries();
+      await refreshDebts();
     })();
   }, []);
 
@@ -391,6 +467,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         newOnlineOrdersCount, clearOnlineBadge, updateOnlineOrderStatus,
         refreshProducts, refreshOrders, refreshUsers, refreshCategories, refreshOnlineOrders,
         updateStockFor, saveOrderAndRefresh, deleteOrderAndRefresh,
+        refreshSalaries, addSalaryAndRefresh, deleteSalaryAndRefresh,
+        refreshDebts, addDebtAndRefresh, addDebtPaymentAndRefresh, deleteDebtAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,
         resetAllDataAndRefresh,
         lang, setLang, t: translate,

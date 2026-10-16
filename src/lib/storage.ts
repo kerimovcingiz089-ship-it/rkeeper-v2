@@ -49,6 +49,8 @@ export function defaultData(): AppData {
       { id: "u1", name: "Admin",  username: "admin", password: "admin123", role: "admin" },
       { id: "u2", name: "Kassir", username: "kassa", password: "kassa123", role: "kassa" },
     ],
+    salaries: [],
+    debts: [],
   };
 }
 
@@ -71,6 +73,8 @@ export function loadData(): AppData {
       nextTakeawayNo: parsed.nextTakeawayNo || 1,
       nextReceiptNo:  parsed.nextReceiptNo  || 1,
       users:          parsed.users?.length          ? parsed.users          : def.users,
+      salaries:       parsed.salaries       || [],
+      debts:          (parsed.debts || []).map((d: any) => ({ ...d, payments: d.payments || [] })),
     };
   } catch {
     return def;

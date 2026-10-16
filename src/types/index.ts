@@ -74,6 +74,37 @@ export interface Settings {
   currency: string;
 }
 
+export interface SalaryPayment {
+  id: string;
+  userId: string;
+  employeeName: string;
+  amount: number;
+  dateStr: string;
+  note?: string;
+  createdAt: number;
+  paidBy: string;
+}
+
+export interface DebtPayment {
+  amount: number;
+  dateStr: string;
+  note?: string;
+  createdAt: number;
+}
+
+export type DebtKind = "given" | "taken";
+
+export interface Debt {
+  id: string;
+  personName: string;
+  kind: DebtKind;
+  totalAmount: number;
+  payments: DebtPayment[];
+  dateStr: string;
+  note?: string;
+  createdAt: number;
+}
+
 export type OnlineOrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
 
 export interface OnlineOrder {
@@ -102,4 +133,6 @@ export interface AppData {
   nextTakeawayNo: number;
   nextReceiptNo: number;
   users: User[];
+  salaries: SalaryPayment[];
+  debts: Debt[];
 }

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { AppData, MenuItem, HistoryRecord, User } from "../types";
+import type { AppData, MenuItem, HistoryRecord, User, SalaryPayment, Debt } from "../types";
 
 /* ─── Products ─────────────────────────────────────────── */
 
@@ -187,6 +187,111 @@ export async function deleteOnlineOrderRecord(id: string): Promise<void> {
     if (error) console.error("Supabase delete online_order:", error);
   } catch (err) {
     console.error("deleteOnlineOrderRecord:", err);
+  }
+}
+
+/* ─── Salaries ─────────────────────────────────────────── */
+
+export async function fetchSalaries(): Promise<SalaryPayment[] | null> {
+  try {
+    const { data: rows, error } = await supabase.from("salaries").select("*").order("created_at", { ascending: false });
+    if (error) { console.warn("Supabase salaries fetch:", error); return null; }
+    if (!rows) return null;
+    return rows.map((s: any) => ({
+      id: String(s.id),
+      userId: s.user_id || "",
+      employeeName: s.employee_name || "",
+      amount: Number(s.amount || 0),
+      dateStr: s.date_str || "",
+      note: s.note || "",
+      createdAt: s.created_at ? new Date(s.created_at).getTime() : Date.now(),
+      paidBy: s.paid_by || "",
+    }));
+  } catch (err) {
+    console.error("fetchSalaries:", err);
+    return null;
+  }
+}
+
+export async function addSalary(s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }): Promise<void> {
+  try {
+    const { error } = await supabase.from("salaries").insert([{
+      user_id: s.userId,
+      employee_name: s.employeeName,
+      amount: Number(s.amount),
+      date_str: s.dateStr,
+      note: s.note || "",
+      paid_by: s.paidBy || "",
+    }]);
+    if (error) console.error("Supabase insert salary:", error);
+  } catch (err) {
+    console.error("addSalary:", err);
+  }
+}
+
+export async function deleteSalary(id: string): Promise<void> {
+  try {
+    const { error } = await supabase.from("salaries").delete().eq("id", id);
+    if (error) console.error("Supabase delete salary:", error);
+  } catch (err) {
+    console.error("deleteSalary:", err);
+  }
+}
+
+/* ─── Debts ────────────────────────────────────────────── */
+
+export async function fetchDebts(): Promise<Debt[] | null> {
+  try {
+    const { data: rows, error } = await supabase.from("debts").select("*").order("created_at", { ascending: false });
+    if (error) { console.warn("Supabase debts fetch:", error); return null; }
+    if (!rows) return null;
+    return rows.map((d: any) => ({
+      id: String(d.id),
+      personName: d.person_name || "",
+      kind: (d.kind === "taken" ? "taken" : "given") as Debt["kind"],
+      totalAmount: Number(d.total_amount || 0),
+      payments: Array.isArray(d.payments) ? d.payments : [],
+      dateStr: d.date_str || "",
+      note: d.note || "",
+      createdAt: d.created_at ? new Date(d.created_at).getTime() : Date.now(),
+    }));
+  } catch (err) {
+    console.error("fetchDebts:", err);
+    return null;
+  }
+}
+
+export async function addDebt(d: { personName: string; kind: string; totalAmount: number; dateStr: string; note?: string }): Promise<void> {
+  try {
+    const { error } = await supabase.from("debts").insert([{
+      person_name: d.personName,
+      kind: d.kind,
+      total_amount: Number(d.totalAmount),
+      payments: [],
+      date_str: d.dateStr,
+      note: d.note || "",
+    }]);
+    if (error) console.error("Supabase insert debt:", error);
+  } catch (err) {
+    console.error("addDebt:", err);
+  }
+}
+
+export async function updateDebtPayments(id: string, payments: Debt["payments"]): Promise<void> {
+  try {
+    const { error } = await supabase.from("debts").update({ payments }).eq("id", id);
+    if (error) console.error("Supabase update debt payments:", error);
+  } catch (err) {
+    console.error("updateDebtPayments:", err);
+  }
+}
+
+export async function deleteDebt(id: string): Promise<void> {
+  try {
+    const { error } = await supabase.from("debts").delete().eq("id", id);
+    if (error) console.error("Supabase delete debt:", error);
+  } catch (err) {
+    console.error("deleteDebt:", err);
   }
 }
 

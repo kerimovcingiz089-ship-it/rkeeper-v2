@@ -8,13 +8,15 @@ const NAV = [
   { id: "online",   key: "nav.online",   icon: "🌐", badge: true as const },
   { id: "stock",    key: "nav.stock",    icon: "🗂" },
   { id: "menu",     key: "nav.menu",     icon: "☰" },
-  { id: "reports",  key: "nav.reports",  icon: "📊" },
+  { id: "reports", key: "nav.reports", icon: "📊" },
+  { id: "salary",  key: "nav.salary",  icon: "💰" },
+  { id: "debts",   key: "nav.debts",   icon: "📒" },
   { id: "users",    key: "nav.users",    icon: "👥" },
   { id: "settings", key: "nav.settings", icon: "⚙" },
 ] as const;
 
 const ROLE_NAV: Record<string, string[]> = {
-  admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "users", "settings"],
+  admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "users", "settings"],
   kassa: ["tables", "order", "takeaway", "online", "stock"],
 };
 

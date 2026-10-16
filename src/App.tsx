@@ -11,6 +11,8 @@ import OnlineOrdersView from "./components/views/OnlineOrdersView";
 import StockView      from "./components/views/StockView";
 import MenuView       from "./components/views/MenuView";
 import ReportsView    from "./components/views/ReportsView";
+import SalaryView     from "./components/views/SalaryView";
+import DebtsView      from "./components/views/DebtsView";
 import UsersView      from "./components/views/UsersView";
 import SettingsView   from "./components/views/SettingsView";
 
@@ -27,12 +29,14 @@ function AppShell() {
     stock:    <StockView />,
     menu:     <MenuView />,
     reports:  <ReportsView />,
+    salary:   <SalaryView />,
+    debts:    <DebtsView />,
     users:    <UsersView />,
     settings: <SettingsView />,
   };
 
   const ROLE_ALLOWED: Record<string, string[]> = {
-    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "users", "settings"],
+    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "users", "settings"],
     kassa: ["tables", "order", "takeaway", "online", "stock"],
   };
   const allowed = ROLE_ALLOWED[currentUser.role] || [];
