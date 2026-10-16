@@ -62,15 +62,24 @@ export default function MenuPage({ categories, products, cart, addToCart, update
           <p className="text-gray-400 text-sm">Bütün məhsullarımızı kəşf edin</p>
         </div>
 
-        {/* Category pills */}
-        <div className="flex gap-2.5 overflow-x-auto pb-5 mb-8 scrollbar-hide">
-          {categories.map((c, i) => (
+        {/* Category cards */}
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2.5 mb-8">
+          <button onClick={() => setActiveCat(null)}
+            className={`rounded-2xl px-2 py-3.5 flex flex-col items-center gap-1.5 transition-all ${
+              activeCat === null ? "text-white shadow-lg" : "text-gray-500 bg-white border border-gray-100 hover:border-rose-200 hover:text-rose-500"
+            }`}
+            style={activeCat === null ? { background: "linear-gradient(135deg,#F43F5E,#E11D48)", boxShadow: "0 4px 16px rgba(244,63,94,.3)" } : {}}>
+            <span className="text-2xl">🍽️</span>
+            <span className="text-xs font-bold leading-tight text-center">Hamısı</span>
+          </button>
+          {categories.map((c) => (
             <button key={c.id} onClick={() => setActiveCat(c.id)}
-              className={`px-6 py-3 rounded-2xl text-sm font-bold whitespace-nowrap transition-all ${
+              className={`rounded-2xl px-2 py-3.5 flex flex-col items-center gap-1.5 transition-all ${
                 activeCat === c.id ? "text-white shadow-lg" : "text-gray-500 bg-white border border-gray-100 hover:border-rose-200 hover:text-rose-500"
               }`}
               style={activeCat === c.id ? { background: "linear-gradient(135deg,#F43F5E,#E11D48)", boxShadow: "0 4px 16px rgba(244,63,94,.3)" } : {}}>
-               {getCatEmoji(c.name)} {c.name}
+              <span className="text-2xl">{getCatEmoji(c.name)}</span>
+              <span className="text-xs font-bold leading-tight text-center">{c.name}</span>
             </button>
           ))}
         </div>
