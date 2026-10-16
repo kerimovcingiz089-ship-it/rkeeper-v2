@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord, fetchSalaries, addSalary, deleteSalary, fetchDebts, addDebt, updateDebtPayments, deleteDebt } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord, fetchSalaries, addSalary, deleteSalary, fetchSalaryEmployees, addSalaryEmployee, deleteSalaryEmployee, fetchDebts, addDebt, updateDebtPayments, deleteDebt } from "../lib/supabaseApi";
 import { t, type LangCode } from "../lib/translations";
 
 /* ─── Types ─────────────────────────────────────────────── */
@@ -66,8 +66,12 @@ interface AppCtx {
   deleteOrderAndRefresh: (id: string) => Promise<void>;
   /* salaries */
   refreshSalaries: () => Promise<void>;
-  addSalaryAndRefresh: (s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => Promise<void>;
+  addSalaryAndRefresh: (s: { employeeId?: string; userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => Promise<void>;
   deleteSalaryAndRefresh: (id: string) => Promise<void>;
+  /* salary employees */
+  refreshSalaryEmployees: () => Promise<void>;
+  addSalaryEmployeeAndRefresh: (name: string, note?: string) => Promise<void>;
+  deleteSalaryEmployeeAndRefresh: (id: string) => Promise<void>;
   /* debts */
   refreshDebts: () => Promise<void>;
   addDebtAndRefresh: (d: { personName: string; kind: string; totalAmount: number; dateStr: string; note?: string }) => Promise<void>;
@@ -301,10 +305,35 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const addSalaryAndRefresh = useCallback(async (s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => {
+  const addSalaryAndRefresh = useCallback(async (s: { employeeId?: string; userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }) => {
     await addSalary(s);
     await refreshSalaries();
   }, [refreshSalaries]);
+
+  const refreshSalaryEmployees = useCallback(async () => {
+    const list = await fetchSalaryEmployees();
+    if (list) {
+      setDataRaw((prev) => {
+        const next = { ...prev, salaryEmployees: list };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
+  const addSalaryEmployeeAndRefresh = useCallback(async (name: string, note: string = "") => {
+    await addSalaryEmployee(name, note);
+    await refreshSalaryEmployees();
+  }, [refreshSalaryEmployees]);
+
+  const deleteSalaryEmployeeAndRefresh = useCallback(async (id: string) => {
+    await deleteSalaryEmployee(id);
+    setDataRaw((prev) => {
+      const next = { ...prev, salaryEmployees: prev.salaryEmployees.filter((e) => String(e.id) !== String(id)) };
+      saveData(next);
+      return next;
+    });
+  }, []);
 
   const deleteSalaryAndRefresh = useCallback(async (id: string) => {
     await deleteSalary(id);
@@ -352,6 +381,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await refreshUsers();
       await refreshOnlineOrders();
       await refreshSalaries();
+      await refreshSalaryEmployees();
       await refreshDebts();
     })();
   }, []);
@@ -480,6 +510,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshProducts, refreshOrders, refreshUsers, refreshCategories, refreshOnlineOrders,
         updateStockFor, saveOrderAndRefresh, deleteOrderAndRefresh,
         refreshSalaries, addSalaryAndRefresh, deleteSalaryAndRefresh,
+        refreshSalaryEmployees, addSalaryEmployeeAndRefresh, deleteSalaryEmployeeAndRefresh,
         refreshDebts, addDebtAndRefresh, addDebtPaymentAndRefresh, deleteDebtAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,
         resetAllDataAndRefresh,

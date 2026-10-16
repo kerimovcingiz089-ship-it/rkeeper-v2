@@ -75,8 +75,16 @@ export interface Settings {
   currency: string;
 }
 
+export interface SalaryEmployee {
+  id: string;
+  name: string;
+  note?: string;
+  createdAt: number;
+}
+
 export interface SalaryPayment {
   id: string;
+  employeeId: string;
   userId: string;
   employeeName: string;
   amount: number;
@@ -135,5 +143,6 @@ export interface AppData {
   nextReceiptNo: number;
   users: User[];
   salaries: SalaryPayment[];
+  salaryEmployees: SalaryEmployee[];
   debts: Debt[];
 }

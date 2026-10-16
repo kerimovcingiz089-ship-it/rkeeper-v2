@@ -50,6 +50,7 @@ export function defaultData(): AppData {
       { id: "u2", name: "Kassir", username: "kassa", password: "kassa123", role: "kassa", pin: "2222" },
     ],
     salaries: [],
+    salaryEmployees: [],
     debts: [],
   };
 }
@@ -73,7 +74,8 @@ export function loadData(): AppData {
       nextTakeawayNo: parsed.nextTakeawayNo || 1,
       nextReceiptNo:  parsed.nextReceiptNo  || 1,
       users:          parsed.users?.length          ? parsed.users.map((u: any) => ({ ...u, pin: u.pin ?? "" })) : def.users,
-      salaries:       parsed.salaries       || [],
+      salaries:       (parsed.salaries || []).map((s: any) => ({ ...s, employeeId: s.employeeId ?? "" })),
+      salaryEmployees: parsed.salaryEmployees || [],
       debts:          (parsed.debts || []).map((d: any) => ({ ...d, payments: d.payments || [] })),
     };
   } catch {

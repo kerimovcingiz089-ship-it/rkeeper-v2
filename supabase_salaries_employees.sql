@@ -1,0 +1,12 @@
+CREATE TABLE IF NOT EXISTS salary_employees (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name TEXT NOT NULL DEFAULT '',
+  note TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE salary_employees ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow all" ON salary_employees FOR ALL USING (true) WITH CHECK (true);
+
+ALTER TABLE salaries ADD COLUMN IF NOT EXISTS employee_id TEXT DEFAULT '';

@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { AppData, MenuItem, HistoryRecord, User, SalaryPayment, Debt } from "../types";
+import type { AppData, MenuItem, HistoryRecord, User, SalaryPayment, SalaryEmployee, Debt } from "../types";
 
 /* ─── Products ─────────────────────────────────────────── */
 
@@ -199,6 +199,7 @@ export async function fetchSalaries(): Promise<SalaryPayment[] | null> {
     if (!rows) return null;
     return rows.map((s: any) => ({
       id: String(s.id),
+      employeeId: s.employee_id || "",
       userId: s.user_id || "",
       employeeName: s.employee_name || "",
       amount: Number(s.amount || 0),
@@ -213,9 +214,10 @@ export async function fetchSalaries(): Promise<SalaryPayment[] | null> {
   }
 }
 
-export async function addSalary(s: { userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }): Promise<void> {
+export async function addSalary(s: { employeeId?: string; userId: string; employeeName: string; amount: number; dateStr: string; note?: string; paidBy?: string }): Promise<void> {
   try {
     const { error } = await supabase.from("salaries").insert([{
+      employee_id: s.employeeId || "",
       user_id: s.userId,
       employee_name: s.employeeName,
       amount: Number(s.amount),
@@ -226,6 +228,41 @@ export async function addSalary(s: { userId: string; employeeName: string; amoun
     if (error) console.error("Supabase insert salary:", error);
   } catch (err) {
     console.error("addSalary:", err);
+  }
+}
+
+export async function fetchSalaryEmployees(): Promise<SalaryEmployee[] | null> {
+  try {
+    const { data: rows, error } = await supabase.from("salary_employees").select("*").order("created_at", { ascending: true });
+    if (error) { console.warn("Supabase salary_employees fetch:", error); return null; }
+    if (!rows) return null;
+    return rows.map((e: any) => ({
+      id: String(e.id),
+      name: e.name || "",
+      note: e.note || "",
+      createdAt: e.created_at ? new Date(e.created_at).getTime() : Date.now(),
+    }));
+  } catch (err) {
+    console.error("fetchSalaryEmployees:", err);
+    return null;
+  }
+}
+
+export async function addSalaryEmployee(name: string, note: string = ""): Promise<void> {
+  try {
+    const { error } = await supabase.from("salary_employees").insert([{ name, note }]);
+    if (error) console.error("Supabase insert salary_employee:", error);
+  } catch (err) {
+    console.error("addSalaryEmployee:", err);
+  }
+}
+
+export async function deleteSalaryEmployee(id: string): Promise<void> {
+  try {
+    const { error } = await supabase.from("salary_employees").delete().eq("id", id);
+    if (error) console.error("Supabase delete salary_employee:", error);
+  } catch (err) {
+    console.error("deleteSalaryEmployee:", err);
   }
 }
 
