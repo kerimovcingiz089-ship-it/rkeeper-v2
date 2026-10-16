@@ -72,6 +72,7 @@
 - Supabase-dən kateqoriya + məhsul oxuyur, `online_orders`-ə yazır
 - Tailwind v3, Google Fonts (Inter + Playfair Display)
 - vercel.json: bütün route-lar index.html-ə yönləndirilir
+- **QR menyu URL:** https://arzumshirniyyat.vercel.app/m (masa QR: `/m/:masaAdı`)
 
 ### Fayllar
 | Fayl | Nə üçündür |

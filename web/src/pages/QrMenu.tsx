@@ -54,18 +54,29 @@ export default function QrMenu({ categories, products }: Props) {
         <p className="text-sm text-gray-400">Şirin dadların ünvanı</p>
       </div>
 
-      {/* ── Category pills (sticky) ── */}
-      <div className="sticky top-14 z-30 pt-3 pb-2" style={{ background: "linear-gradient(180deg,#FFFBF5 85%,transparent)" }}>
-        <div className="max-w-md mx-auto px-4 flex gap-2 overflow-x-auto scrollbar-hide">
+      {/* ── Category cards ── */}
+      <div className="max-w-md mx-auto px-4 pt-4 pb-2">
+        <div className="grid grid-cols-3 gap-2">
+          <button onClick={() => setActiveCat(null)}
+            className={`rounded-2xl px-1 py-2.5 flex flex-col items-center gap-1 transition-all border ${
+              activeCat === null
+                ? "text-white border-transparent shadow-lg"
+                : "text-gray-500 bg-white border-gray-100"
+            }`}
+            style={activeCat === null ? { background: "linear-gradient(135deg,#F43F5E,#E11D48)", boxShadow: "0 4px 16px rgba(244,63,94,.3)" } : {}}>
+            <span className="text-xl">🍽️</span>
+            <span className="text-[11px] font-bold leading-tight text-center">Hamısı</span>
+          </button>
           {categories.map(c => (
             <button key={c.id} onClick={() => setActiveCat(c.id)}
-              className={`px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all border ${
+              className={`rounded-2xl px-1 py-2.5 flex flex-col items-center gap-1 transition-all border ${
                 activeCat === c.id
                   ? "text-white border-transparent shadow-lg"
-                  : "text-gray-500 bg-white border-gray-100 hover:border-rose-200 hover:text-rose-500"
+                  : "text-gray-500 bg-white border-gray-100"
               }`}
               style={activeCat === c.id ? { background: "linear-gradient(135deg,#F43F5E,#E11D48)", boxShadow: "0 4px 16px rgba(244,63,94,.3)" } : {}}>
-              {catEmoji(c.name)} {c.name}
+              <span className="text-xl">{catEmoji(c.name)}</span>
+              <span className="text-[11px] font-bold leading-tight text-center">{c.name}</span>
             </button>
           ))}
         </div>
