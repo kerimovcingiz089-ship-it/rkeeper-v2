@@ -5,7 +5,7 @@ const TITLE_MAP: Record<string, string> = {
   tables: "Masalar", menu: "Menyu İdarəetməsi", reports: "Hesabatlar",
   users: "İstifadəçilər", settings: "Ayarlar", order: "Sifariş",
   takeaway: "Paket Sifariş", stock: "Stok İdarəetməsi",
-  salary: "Maaşlar", debts: "Borc və Alacaqlar",
+  salary: "Maaşlar", debts: "Borc və Alacaqlar", expenses: "Xərclər",
 };
 const SUB_MAP: Record<string, string> = {
   tables: "Masaya klikləyərək sifariş açın",
@@ -13,6 +13,7 @@ const SUB_MAP: Record<string, string> = {
   reports: "Günlük satış tarixçəsi (Supabase Live)",
   salary: "İşçilərə ödənilən maaşlar",
   debts: "Verilən və alınan nisyələr",
+  expenses: "Restoranın çıxış xərcləri",
   users: "İstifadəçiləri idarə edin, rol təyin edin",
   settings: "Restoran ayarları",
   order: "",

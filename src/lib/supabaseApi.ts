@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { AppData, MenuItem, HistoryRecord, User, SalaryPayment, SalaryEmployee, Debt } from "../types";
+import type { AppData, MenuItem, HistoryRecord, User, SalaryPayment, SalaryEmployee, Debt, Expense } from "../types";
 
 /* ─── Products ─────────────────────────────────────────── */
 
@@ -329,6 +329,52 @@ export async function deleteDebt(id: string): Promise<void> {
     if (error) console.error("Supabase delete debt:", error);
   } catch (err) {
     console.error("deleteDebt:", err);
+  }
+}
+
+/* ─── Expenses ─────────────────────────────────────────── */
+
+export async function fetchExpenses(): Promise<Expense[] | null> {
+  try {
+    const { data: rows, error } = await supabase.from("expenses").select("*").order("created_at", { ascending: false });
+    if (error) { console.warn("Supabase expenses fetch:", error); return null; }
+    if (!rows) return null;
+    return rows.map((e: any) => ({
+      id: String(e.id),
+      title: e.title || "",
+      amount: Number(e.amount || 0),
+      dateStr: e.date_str || "",
+      note: e.note || "",
+      createdBy: e.created_by || "",
+      createdAt: e.created_at ? new Date(e.created_at).getTime() : Date.now(),
+    }));
+  } catch (err) {
+    console.error("fetchExpenses:", err);
+    return null;
+  }
+}
+
+export async function addExpense(e: { title: string; amount: number; dateStr: string; note?: string; createdBy?: string }): Promise<void> {
+  try {
+    const { error } = await supabase.from("expenses").insert([{
+      title: e.title,
+      amount: Number(e.amount),
+      date_str: e.dateStr,
+      note: e.note || "",
+      created_by: e.createdBy || "",
+    }]);
+    if (error) console.error("Supabase insert expense:", error);
+  } catch (err) {
+    console.error("addExpense:", err);
+  }
+}
+
+export async function deleteExpense(id: string): Promise<void> {
+  try {
+    const { error } = await supabase.from("expenses").delete().eq("id", id);
+    if (error) console.error("Supabase delete expense:", error);
+  } catch (err) {
+    console.error("deleteExpense:", err);
   }
 }
 

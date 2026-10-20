@@ -11,12 +11,13 @@ const NAV = [
   { id: "reports", key: "nav.reports", icon: "📊" },
   { id: "salary",  key: "nav.salary",  icon: "💰" },
   { id: "debts",   key: "nav.debts",   icon: "📒" },
+  { id: "expenses", key: "nav.expenses", icon: "💸" },
   { id: "users",    key: "nav.users",    icon: "👥" },
   { id: "settings", key: "nav.settings", icon: "⚙" },
 ] as const;
 
 const ROLE_NAV: Record<string, string[]> = {
-  admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "users", "settings"],
+  admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "expenses", "users", "settings"],
   kassa: ["tables", "order", "takeaway", "online", "stock"],
 };
 

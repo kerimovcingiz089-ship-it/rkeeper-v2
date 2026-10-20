@@ -8,11 +8,11 @@ import React, {
 } from "react";
 import type { AppData, User } from "../types";
 import { loadData, saveData, SESSION_KEY, defaultData } from "../lib/storage";
-import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord, fetchSalaries, addSalary, deleteSalary, fetchSalaryEmployees, addSalaryEmployee, deleteSalaryEmployee, fetchDebts, addDebt, updateDebtPayments, deleteDebt } from "../lib/supabaseApi";
+import { fetchProducts, fetchOrders, updateStock as apiUpdateStock, saveOrder, fetchUsers, addUser, updateUser, deleteUser, resetAllData, fetchCategories, fetchOnlineOrders, updateOnlineOrderStatus as apiUpdateOnlineOrderStatus, deleteOrder, deleteOnlineOrderRecord, fetchSalaries, addSalary, deleteSalary, fetchSalaryEmployees, addSalaryEmployee, deleteSalaryEmployee, fetchDebts, addDebt, updateDebtPayments, deleteDebt, fetchExpenses, addExpense, deleteExpense } from "../lib/supabaseApi";
 import { t, type LangCode } from "../lib/translations";
 
 /* ─── Types ─────────────────────────────────────────────── */
-type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "salary" | "debts" | "users" | "settings";
+type View = "tables" | "order" | "takeaway" | "online" | "stock" | "menu" | "reports" | "salary" | "debts" | "expenses" | "users" | "settings";
 
 interface AppCtx {
   data: AppData;
@@ -77,6 +77,10 @@ interface AppCtx {
   addDebtAndRefresh: (d: { personName: string; kind: string; totalAmount: number; dateStr: string; note?: string }) => Promise<void>;
   addDebtPaymentAndRefresh: (id: string, p: { amount: number; dateStr: string; note?: string }) => Promise<void>;
   deleteDebtAndRefresh: (id: string) => Promise<void>;
+  /* expenses */
+  refreshExpenses: () => Promise<void>;
+  addExpenseAndRefresh: (e: { title: string; amount: number; dateStr: string; note?: string; createdBy?: string }) => Promise<void>;
+  deleteExpenseAndRefresh: (id: string) => Promise<void>;
   /* user CRUD */
   addUserAndRefresh: (name: string, username: string, password: string, role: string, pin?: string) => Promise<User | null>;
   updateUserAndRefresh: (id: string, fields: { name?: string; username?: string; password?: string; role?: string; pin?: string }) => Promise<void>;
@@ -179,7 +183,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   /* ── view switch ── */
   const ROLE_NAV: Record<string, View[]> = {
-    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "users", "settings"],
+    admin: ["tables", "order", "takeaway", "online", "stock", "menu", "reports", "salary", "debts", "expenses", "users", "settings"],
     kassa: ["tables", "order", "takeaway", "online", "stock", "reports"],
   };
 
@@ -372,6 +376,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     });
   }, []);
 
+  /* ── expenses ── */
+  const refreshExpenses = useCallback(async () => {
+    const list = await fetchExpenses();
+    if (list) {
+      setDataRaw((prev) => {
+        const next = { ...prev, expenses: list };
+        saveData(next);
+        return next;
+      });
+    }
+  }, []);
+
+  const addExpenseAndRefresh = useCallback(async (e: { title: string; amount: number; dateStr: string; note?: string; createdBy?: string }) => {
+    await addExpense(e);
+    await refreshExpenses();
+  }, [refreshExpenses]);
+
+  const deleteExpenseAndRefresh = useCallback(async (id: string) => {
+    await deleteExpense(id);
+    setDataRaw((prev) => {
+      const next = { ...prev, expenses: prev.expenses.filter((x) => String(x.id) !== String(id)) };
+      saveData(next);
+      return next;
+    });
+  }, []);
+
   /* ── initial load ── */
   useEffect(() => {
     (async () => {
@@ -383,6 +413,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       await refreshSalaries();
       await refreshSalaryEmployees();
       await refreshDebts();
+      await refreshExpenses();
     })();
   }, []);
 
@@ -512,6 +543,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshSalaries, addSalaryAndRefresh, deleteSalaryAndRefresh,
         refreshSalaryEmployees, addSalaryEmployeeAndRefresh, deleteSalaryEmployeeAndRefresh,
         refreshDebts, addDebtAndRefresh, addDebtPaymentAndRefresh, deleteDebtAndRefresh,
+        refreshExpenses, addExpenseAndRefresh, deleteExpenseAndRefresh,
         addUserAndRefresh, updateUserAndRefresh, deleteUserAndRefresh,
         resetAllDataAndRefresh,
         lang, setLang, t: translate,

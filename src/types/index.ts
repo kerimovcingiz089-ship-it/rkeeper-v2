@@ -101,6 +101,16 @@ export interface DebtPayment {
   createdAt: number;
 }
 
+export interface Expense {
+  id: string;
+  title: string;
+  amount: number;
+  dateStr: string;
+  note?: string;
+  createdAt: number;
+  createdBy: string;
+}
+
 export type DebtKind = "given" | "taken";
 
 export interface Debt {
@@ -145,4 +155,5 @@ export interface AppData {
   salaries: SalaryPayment[];
   salaryEmployees: SalaryEmployee[];
   debts: Debt[];
+  expenses: Expense[];
 }

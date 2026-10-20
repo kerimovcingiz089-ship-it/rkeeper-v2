@@ -52,6 +52,7 @@ export function defaultData(): AppData {
     salaries: [],
     salaryEmployees: [],
     debts: [],
+    expenses: [],
   };
 }
 
@@ -77,6 +78,7 @@ export function loadData(): AppData {
       salaries:       (parsed.salaries || []).map((s: any) => ({ ...s, employeeId: s.employeeId ?? "" })),
       salaryEmployees: parsed.salaryEmployees || [],
       debts:          (parsed.debts || []).map((d: any) => ({ ...d, payments: d.payments || [] })),
+      expenses:       parsed.expenses       || [],
     };
   } catch {
     return def;
