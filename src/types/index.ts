@@ -41,6 +41,9 @@ export interface HistoryRecord {
   id: string;
   tableName: string;
   items: HistoryLine[];
+  subtotal?: number;
+  servicePercent?: number;
+  serviceAmount?: number;
   total: number;
   paymentMethod: PaymentMethod;
   closedBy: string;
@@ -144,7 +147,7 @@ export interface AppData {
   tables: AppTable[];
   categories: Category[];
   items: MenuItem[];
-  orders: Record<string, { items: OrderLine[] }>;
+  orders: Record<string, { items: OrderLine[]; servicePercent?: number }>;
   history: HistoryRecord[];
   takeawayOrders: TakeawayOrder[];
   onlineOrders: OnlineOrder[];

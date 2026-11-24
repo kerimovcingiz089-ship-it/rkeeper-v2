@@ -4,6 +4,9 @@ export interface ReceiptData {
   restaurantName: string;
   tableName: string;
   items: { name: string; qty: number; price: number }[];
+  subtotal?: number;
+  servicePercent?: number;
+  serviceAmount?: number;
   total: number;
   receiptNo: number;
   cashier: string;
@@ -60,6 +63,18 @@ export default function Receipt({ data }: { data: ReceiptData }) {
         <span className="font-normal">Məhsul sayı</span>
         <span className="font-bold">{itemCount} ədəd</span>
       </div>
+      {Number(data.servicePercent || 0) > 0 && (
+        <>
+          <div className="flex justify-between text-xs text-black py-0.5">
+            <span className="font-normal">Məhsullar</span>
+            <span className="font-bold">{fmtMoney(data.subtotal ?? data.total, data.currency)}</span>
+          </div>
+          <div className="flex justify-between text-xs text-black py-0.5">
+            <span className="font-normal">Servis haqqı ({data.servicePercent}%)</span>
+            <span className="font-bold">+{fmtMoney(data.serviceAmount || 0, data.currency)}</span>
+          </div>
+        </>
+      )}
       <div className="flex justify-between font-black text-[1.2rem] py-1">
         <span>CƏMİ</span>
         <span>{fmtMoney(data.total, data.currency)}</span>

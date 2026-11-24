@@ -32,10 +32,24 @@ export default function OrderView() {
   const catId = activeCatId || (data.categories[0]?.id ?? null);
   const order = data.orders[activeTableId] || { items: [] };
 
-  const total = order.items.reduce((sum, li) => {
+  const subtotal = order.items.reduce((sum, li) => {
     const item = data.items.find(i => i.id === li.itemId);
     return sum + (item ? item.price * li.qty : 0);
   }, 0);
+  const servicePercent = Math.max(0, Number(order.servicePercent || 0));
+  const serviceAmount = Math.round((subtotal * servicePercent / 100) * 100) / 100;
+  const total = Math.round((subtotal + serviceAmount) * 100) / 100;
+
+  function setServicePercent(value: string) {
+    const num = Math.min(100, Math.max(0, Number(value) || 0));
+    setData(prev => ({
+      ...prev,
+      orders: {
+        ...prev.orders,
+        [activeTableId!]: { ...(prev.orders[activeTableId!] || { items: [] }), servicePercent: num },
+      },
+    }));
+  }
 
   function addItem(itemId: string, qty: number = 1) {
     const item = data.items.find(i => i.id === itemId);
@@ -129,6 +143,9 @@ export default function OrderView() {
         paymentMethod: selectedPay,
         closedBy: currentUser?.name ?? "Kassir",
         isTakeaway: false,
+        subtotal,
+        servicePercent,
+        serviceAmount,
       });
 
       setData(prev => ({
@@ -154,6 +171,9 @@ export default function OrderView() {
       restaurantName: data.settings.name,
       tableName: table.name,
       items: lineItems,
+      subtotal,
+      servicePercent,
+      serviceAmount,
       total,
       receiptNo: data.nextReceiptNo,
       cashier: currentUser?.name ?? "",
@@ -317,6 +337,29 @@ export default function OrderView() {
         </div>
 
         <div className="border-t border-gray-100 p-4 space-y-3">
+          <div className="bg-[#FFFBEB] border border-[#FDE68A] rounded-xl px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-[#92400E]">Servis haqqı</span>
+                <input type="number" min="0" max="100" step="0.5" value={servicePercent || ""}
+                  onChange={e => setServicePercent(e.target.value)} placeholder="0"
+                  className="w-14 px-2 py-1 text-right border border-[#FCD34D] bg-white rounded-lg text-sm font-extrabold text-[#92400E] focus:outline-none" />
+                <span className="text-xs font-bold text-[#92400E]">%</span>
+              </div>
+              <span className="text-sm font-extrabold tabular-nums text-[#92400E]">+{fmtMoney(serviceAmount, data.settings.currency)}</span>
+            </div>
+            {subtotal > 0 && servicePercent > 0 && (
+              <div className="text-[11px] text-[#B45309] mt-1">
+                {fmtMoney(subtotal, data.settings.currency)} × {servicePercent}%
+              </div>
+            )}
+          </div>
+          {serviceAmount > 0 && (
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>Məhsullar</span>
+              <span className="tabular-nums">{fmtMoney(subtotal, data.settings.currency)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-baseline">
             <span className="text-sm text-gray-400">Cəmi</span>
             <span className="text-2xl font-extrabold tabular-nums">{fmtMoney(total, data.settings.currency)}</span>

@@ -47,6 +47,7 @@ function computeHeight(data: ReceiptData): number {
   y += data.items.length === 0 ? LH(12) : data.items.length * ITEM_H;
   y += SEP_H;
   y += ROW_H;
+  if (Number(data.servicePercent || 0) > 0) y += 2 * ROW_H;
   y += 4 + LH(19) + 4;
   if (data.paid) {
     y += ROW_H + 12 + (2 + 8 + LH(12) + 8 + 2);
@@ -150,6 +151,12 @@ export async function buildReceiptDataUrl(data: ReceiptData): Promise<string> {
 
   // Məhsul sayı
   row("Məhsul sayı", `${data.items.reduce((s, li) => s + li.qty, 0)} ədəd`);
+
+  // Servis haqqı
+  if (Number(data.servicePercent || 0) > 0) {
+    row("Məhsullar", fmtMoney(data.subtotal ?? data.total, data.currency));
+    row(`Servis haqqı (${data.servicePercent}%)`, "+" + fmtMoney(data.serviceAmount || 0, data.currency));
+  }
 
   // CƏMİ
   y += 4;

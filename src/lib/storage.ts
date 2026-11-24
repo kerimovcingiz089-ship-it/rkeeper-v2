@@ -67,7 +67,12 @@ export function loadData(): AppData {
       tables:         parsed.tables?.length         ? parsed.tables         : def.tables,
       categories:     parsed.categories?.length     ? parsed.categories     : def.categories,
       items:          (parsed.items || def.items).map((item: any) => ({ ...item, stock: item.stock ?? 0 })),
-      orders:         parsed.orders         || {},
+      orders:         Object.fromEntries(
+        Object.entries(parsed.orders || {}).map(([id, o]: [string, any]) => [
+          id,
+          { items: o?.items || [], servicePercent: Number(o?.servicePercent || 0) },
+        ])
+      ),
       history:        parsed.history        || [],
       takeawayOrders: parsed.takeawayOrders || [],
       onlineOrders:   parsed.onlineOrders   || [],

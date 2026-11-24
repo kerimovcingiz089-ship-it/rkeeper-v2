@@ -378,7 +378,7 @@ export async function deleteExpense(id: string): Promise<void> {
   }
 }
 
-export async function saveOrder(totalPrice: number, items: any[], meta: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean } = {}): Promise<void> {
+export async function saveOrder(totalPrice: number, items: any[], meta: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean; subtotal?: number; servicePercent?: number; serviceAmount?: number } = {}): Promise<void> {
   try {
     const payload = { total_price: Number(totalPrice), items: { _meta: meta, lines: items } };
     const { error } = await supabase.from("orders").insert([payload]);
@@ -460,6 +460,9 @@ export async function fetchOrders(): Promise<HistoryRecord[] | null> {
         id: String(o.id),
         tableName: meta.tableName || o.tableName || o.table_name || "Sifariş #" + o.id,
         items: orderItems,
+        subtotal: meta.subtotal !== undefined ? Number(meta.subtotal) : undefined,
+        servicePercent: meta.servicePercent !== undefined ? Number(meta.servicePercent) : undefined,
+        serviceAmount: meta.serviceAmount !== undefined ? Number(meta.serviceAmount) : undefined,
         total: Number(o.total_price || o.total || 0),
         paymentMethod: meta.paymentMethod || o.paymentMethod || o.payment_method || "cash",
         closedBy: meta.closedBy || o.closedBy || o.closed_by || "Kassir",

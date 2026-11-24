@@ -61,7 +61,7 @@ interface AppCtx {
   /* stock helper */
   updateStockFor: (itemId: string, newStock: number) => Promise<void>;
   /* order save helper */
-  saveOrderAndRefresh: (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean }) => Promise<void>;
+  saveOrderAndRefresh: (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean; subtotal?: number; servicePercent?: number; serviceAmount?: number }) => Promise<void>;
   /* order delete helper (history id, or "online-<id>") */
   deleteOrderAndRefresh: (id: string) => Promise<void>;
   /* salaries */
@@ -499,7 +499,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /* ── order save helper ── */
-  const saveOrderAndRefresh = useCallback(async (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean }) => {
+  const saveOrderAndRefresh = useCallback(async (total: number, items: any[], meta?: { tableName?: string; paymentMethod?: string; closedBy?: string; isTakeaway?: boolean; subtotal?: number; servicePercent?: number; serviceAmount?: number }) => {
     await saveOrder(total, items, meta);
     await refreshOrders();
   }, [refreshOrders]);

@@ -149,7 +149,12 @@ export default function ReportsView() {
                           <span className="truncate">{h.tableName}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate">{h.items.map(li => li.name + " ×" + li.qty).join(", ")}</td>
+                      <td className="px-4 py-3 text-xs text-gray-400 max-w-[200px] truncate">
+                        {h.items.map(li => li.name + " ×" + li.qty).join(", ")}
+                        {Number(h.servicePercent || 0) > 0 && (
+                          <span className="ml-1 text-[#B45309] font-bold">+ Servis {h.servicePercent}%</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-xs font-bold text-gray-500">{h.closedBy}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${h.paymentMethod === "cash" ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"}`}>
@@ -199,6 +204,9 @@ export default function ReportsView() {
                       </div>
                     </div>
                   <div className="flex gap-2 items-center text-xs text-gray-400 pl-8 flex-wrap">
+                    {Number(h.servicePercent || 0) > 0 && (
+                      <span className="text-[#B45309] font-bold">+ Servis {h.servicePercent}%</span>
+                    )}
                     <span>{fmtTime(h.closedAt)}</span>
                     <span className="text-gray-500 font-bold">👤 {h.closedBy}</span>
                     <span className={`px-2 py-0.5 rounded-full font-bold ${h.paymentMethod === "cash" ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"}`}>
